@@ -24,7 +24,7 @@ describe('Create a system account', () => {
     console.log("payer_ar", payer_ar.publicKey.toString());
 
     const counterKeypair = Keypair.generate();
-    console.log("counterKeypair", counterKeypair);
+    console.log("counterKeypair", counterKeypair.publicKey.toString());
 
     const puppetProgram = new Program<Voting>(
       IDL,
@@ -45,8 +45,7 @@ describe('Create a system account', () => {
     ).rpc();
 
     const pollAccount = await puppetProgram.account.pollAccount.fetch(pollAddress);
-    console.log(123,pollAccount);
-
+    console.log("pollAccount结果",pollAccount);
   });
 
 });

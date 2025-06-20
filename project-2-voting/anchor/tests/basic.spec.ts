@@ -9,7 +9,7 @@ describe('Voting', () => {
 
   const program = anchor.workspace.Voting as Program<Voting>;
 
-  console.log("程序id",program.programId);
+  console.log("程序id-programId=",program.programId.toString());
 
   it('initializePoll', async () => {
 

@@ -1,3 +1,5 @@
+// 消除某些编译警告
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 
 declare_id!("5iRyM4LPFo5TZF3SzMqmaFzGhBdNm3mq3v7nVdBcSRpN");

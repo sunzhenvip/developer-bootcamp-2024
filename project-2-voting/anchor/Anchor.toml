@@ -21,6 +21,8 @@ test = "../node_modules/.bin/nx run anchor:jest"
 basic1 = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/basic.spec.ts"
 #运行命令 anchor run bankrun1
 bankrun1 = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/bankrun.spec.ts"
+#查看 program id
+#solana-keygen pubkey target/deploy/voting-keypair.json
 
 [test]
 startup_wait = 5000
