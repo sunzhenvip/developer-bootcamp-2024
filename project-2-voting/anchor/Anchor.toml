@@ -17,6 +17,8 @@ wallet = "~/.config/solana/id.json"
 [scripts]
 #运行命令 会执行所有的测试脚本 anchor test
 test = "../node_modules/.bin/nx run anchor:jest"
+# npm i -D ts-mocha
+# cnpm install --save-dev mocha
 #运行命令 anchor run basic1
 basic1 = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/basic.spec.ts"
 #运行命令 anchor run bankrun1
