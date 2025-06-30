@@ -97,7 +97,7 @@ pub mod vesting {
 #[instruction(company_name: String)]
 pub struct CreateVestingAccount<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,
+    pub signer: Signer<'info>, // 创建 vesting 的公司账户
     #[account(
         init,
         space = 8 + VestingAccount::INIT_SPACE,
@@ -105,8 +105,8 @@ pub struct CreateVestingAccount<'info> {
         seeds = [company_name.as_ref()],
         bump
     )]
-    pub vesting_account: Account<'info, VestingAccount>,
-    pub mint: InterfaceAccount<'info, Mint>,
+    pub vesting_account: Account<'info, VestingAccount>, // 初始化，公司 vesting 存储账户
+    pub mint: InterfaceAccount<'info, Mint>, // 要归属的 SPL Token 类型  如 USDC USDT
     #[account(
         init,
         token::mint = mint,
@@ -115,18 +115,18 @@ pub struct CreateVestingAccount<'info> {
         seeds = [b"vesting_treasury", company_name.as_bytes()],
         bump
     )]
-    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>,
-    pub token_program: Interface<'info, TokenInterface>,
-    pub system_program: Program<'info, System>,
+    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>, // 由合约管理的金库账户（用于转账）
+    pub token_program: Interface<'info, TokenInterface>, // SPL Token 程序
+    pub system_program: Program<'info, System>, // 系统程序，用于初始化账户
 }
 
 #[derive(Accounts)]
 pub struct CreateEmployeeAccount<'info> {
     #[account(mut)]
-    pub owner: Signer<'info>,
-    pub beneficiary: SystemAccount<'info>,
+    pub owner: Signer<'info>, // 公司账户（必须是 vesting_account.owner）
+    pub beneficiary: SystemAccount<'info>, // 员工的钱包地址
     #[account(has_one = owner)]
-    pub vesting_account: Account<'info, VestingAccount>,
+    pub vesting_account: Account<'info, VestingAccount>, // 公司 vesting 信息
     #[account(
         init,
         space = 8 + EmployeeAccount::INIT_SPACE,
@@ -134,15 +134,15 @@ pub struct CreateEmployeeAccount<'info> {
         seeds = [b"employee_vesting", beneficiary.key().as_ref(), vesting_account.key().as_ref()],
         bump
     )]
-    pub employee_account: Account<'info, EmployeeAccount>,
-    pub system_program: Program<'info, System>,
+    pub employee_account: Account<'info, EmployeeAccount>, // 初始化员工 vesting 信息
+    pub system_program: Program<'info, System>, // 系统程序
 }
 
 #[derive(Accounts)]
 #[instruction(company_name: String)]
 pub struct ClaimTokens<'info> {
     #[account(mut)]
-    pub beneficiary: Signer<'info>,
+    pub beneficiary: Signer<'info>, // 员工账户（发起领取）
     #[account(
         mut,
         seeds = [b"employee_vesting", beneficiary.key().as_ref(), vesting_account.key().as_ref()],
@@ -150,7 +150,7 @@ pub struct ClaimTokens<'info> {
         has_one = beneficiary,
         has_one = vesting_account
     )]
-    pub employee_account: Account<'info, EmployeeAccount>,
+    pub employee_account: Account<'info, EmployeeAccount>, // 员工 vesting 数据
     #[account(
         mut,
         seeds = [company_name.as_ref()],
@@ -158,10 +158,10 @@ pub struct ClaimTokens<'info> {
         has_one = treasury_token_account,
         has_one = mint
     )]
-    pub vesting_account: Account<'info, VestingAccount>,
-    pub mint: InterfaceAccount<'info, Mint>,
+    pub vesting_account: Account<'info, VestingAccount>, // 公司 vesting 数据
+    pub mint: InterfaceAccount<'info, Mint>, // Token 铸币信息
     #[account(mut)]
-    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>, // 金库账户（代币来源）
     #[account(
         init_if_needed,
         payer = beneficiary,
@@ -169,35 +169,35 @@ pub struct ClaimTokens<'info> {
         associated_token::authority = beneficiary,
         associated_token::token_program = token_program
     )]
-    pub employee_token_account: InterfaceAccount<'info, TokenAccount>,
-    pub token_program: Interface<'info, TokenInterface>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub system_program: Program<'info, System>,
+    pub employee_token_account: InterfaceAccount<'info, TokenAccount>, // 员工的 ATA（接收代币）
+    pub token_program: Interface<'info, TokenInterface>, // Token 程序
+    pub associated_token_program: Program<'info, AssociatedToken>, // 用于自动创建 ATA
+    pub system_program: Program<'info, System>, // 系统程序
 }
 
 #[account]
 #[derive(InitSpace, Debug)]
 pub struct VestingAccount {
-    pub owner: Pubkey,
-    pub mint: Pubkey,
-    pub treasury_token_account: Pubkey,
+    pub owner: Pubkey, // 创建此 Vesting 的公司账户（签名人）
+    pub mint: Pubkey, // 归属计划使用的 SPL Token 的铸币地址
+    pub treasury_token_account: Pubkey, // 公司金库账户（该账户持有代币）
     #[max_len(50)]
-    pub company_name: String,
-    pub treasury_bump: u8,
-    pub bump: u8,
+    pub company_name: String, // 公司名称，用作种子，最多 50 字符
+    pub treasury_bump: u8, // 	PDA 金库账户的 bump 值
+    pub bump: u8, // 当前 vesting_account PDA 的 bump 值
 }
 
 #[account]
 #[derive(InitSpace, Debug)]
 pub struct EmployeeAccount {
-    pub beneficiary: Pubkey,
-    pub start_time: i64,
-    pub end_time: i64,
-    pub total_amount: i64,
-    pub total_withdrawn: i64,
-    pub cliff_time: i64,
-    pub vesting_account: Pubkey,
-    pub bump: u8,
+    pub beneficiary: Pubkey, // 员工的钱包地址（代币将转给他）
+    pub start_time: i64, // 归属起始时间（Unix 时间戳）
+    pub end_time: i64, // 归属结束时间
+    pub total_amount: i64, // 总归属代币数量
+    pub total_withdrawn: i64, // 员工已领取的代币数量
+    pub cliff_time: i64, // 崖期时间（该时间点前不能领取）
+    pub vesting_account: Pubkey, // 对应的公司 VestingAccount 地址
+    pub bump: u8, // PDA bump
 }
 
 #[error_code]
