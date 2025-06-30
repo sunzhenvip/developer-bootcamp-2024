@@ -107,6 +107,7 @@ pub struct CreateVestingAccount<'info> {
     )]
     pub vesting_account: Account<'info, VestingAccount>, // 初始化，公司 vesting 存储账户
     pub mint: InterfaceAccount<'info, Mint>, // 要归属的 SPL Token 类型  如 USDC USDT
+    // 创建完，它就和任何普通 SPL Token 账户一样，能接收代币转账 企业可以通过钱包往这个地址手动转账
     #[account(
         init,
         token::mint = mint,
