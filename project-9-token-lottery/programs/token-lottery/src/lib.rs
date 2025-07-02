@@ -1,3 +1,5 @@
+// 消除某些编译警告
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use anchor_spl::{
@@ -16,11 +18,11 @@ use anchor_spl::metadata::{
     create_metadata_accounts_v3,
     sign_metadata,
     set_and_verify_sized_collection_item,
-    mpl_token_metadata::types::{
-            CollectionDetails,
-            Creator, 
-            DataV2,
-        },
+};
+use mpl_token_metadata::types::{
+    CollectionDetails,
+    Creator,
+    DataV2,
 };
 
 
