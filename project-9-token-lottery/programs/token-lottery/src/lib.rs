@@ -406,9 +406,12 @@ pub struct ClaimPrize<'info> {
 
 #[derive(Accounts)]
 pub struct CommitWinner<'info> {
+    // 调用者（必须是管理员），提交随机数结果的 signer
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    // token_lottery 抽奖状态账户
+    // 存储抽奖基本信息，包括 authority、randomness_account 等
+    // 使用固定种子 `"token_lottery"` 创建
     #[account(
         mut,
         seeds = [b"token_lottery".as_ref()],
@@ -417,8 +420,10 @@ pub struct CommitWinner<'info> {
     pub token_lottery: Account<'info, TokenLottery>,
 
     /// CHECK: The account's data is validated manually within the handler.
+    // Switchboard V2 生成的随机数账户
+    // CHECK: 数据结构不由 Anchor 自动校验，需在逻辑中手动解析校验
     pub randomness_account_data: UncheckedAccount<'info>,
-
+    // 系统程序（用于执行系统调用或 lamports 检查）
     pub system_program: Program<'info, System>,
 }
 
