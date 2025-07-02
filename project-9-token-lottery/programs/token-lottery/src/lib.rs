@@ -40,7 +40,7 @@ pub const SYMBOL: &str = "TICKET";
 pub mod token_lottery {
 
     use super::*;
-
+    // 初始化抽奖配置（抽奖时间段、票价、初始状态）
     pub fn initialize_config(ctx: Context<InitializeConifg>, start: u64, end: u64, price: u64) -> Result<()> {
         ctx.accounts.token_lottery.bump = ctx.bumps.token_lottery;
         ctx.accounts.token_lottery.lottery_start = start;
@@ -53,7 +53,7 @@ pub mod token_lottery {
         ctx.accounts.token_lottery.winner_chosen = false;
         Ok(())
     }
-
+    // 创建抽奖 NFT 集合（Collection Mint + Metadata）
     pub fn initialize_lottery(ctx: Context<InitializeLottery>) -> Result<()> {
         
         // Create Collection Mint
@@ -143,6 +143,7 @@ pub mod token_lottery {
         Ok(())
     }
 
+    // 用户购票，铸造 Ticket NFT 并加入集合
     pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         let clock = Clock::get()?;
         let ticket_name = NAME.to_owned() + ctx.accounts.token_lottery.ticket_num.to_string().as_str();
@@ -257,6 +258,7 @@ pub mod token_lottery {
         Ok(())
     }
 
+    // 提交随机数结果，记录 randomness 来源
     pub fn commit_a_winner(ctx: Context<CommitWinner>) -> Result<()> {
         let clock = Clock::get()?;
         let token_lottery = &mut ctx.accounts.token_lottery;
@@ -275,6 +277,7 @@ pub mod token_lottery {
         Ok(())
     }
 
+    // 基于 randomness 选择中奖票号
     pub fn choose_a_winner(ctx: Context<ChooseWinner>) -> Result<()> {
         let clock = Clock::get()?;
         let token_lottery = &mut ctx.accounts.token_lottery;
@@ -310,7 +313,7 @@ pub mod token_lottery {
 
         Ok(())
     }
-
+    // 	中将者领取奖池 SOL
     pub fn claim_prize(ctx: Context<ClaimPrize>) -> Result<()> {
         // Check if winner has been chosen
         msg!("Winner chosen: {}", ctx.accounts.token_lottery.winner_chosen);
