@@ -519,9 +519,12 @@ pub struct BuyTicket<'info> {
 
 #[derive(Accounts)]
 pub struct InitializeConifg<'info> {
+    // 调用者，用于支付初始化账户的租金和费用，同时被记录为抽奖管理员
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    // 抽奖配置账户，用于存储整个抽奖活动的核心状态数据（初始化创建）
+    // 使用固定种子 `"token_lottery"` + bump 生成 PDA
+    // `init` 表示第一次创建，`space` 指定数据空间大小（8 + struct 大小）
     #[account(
         init,
         payer = payer,
@@ -531,7 +534,7 @@ pub struct InitializeConifg<'info> {
         bump
     )]
     pub token_lottery: Box<Account<'info, TokenLottery>>,
-
+    // solana的系统程序（用于创建账户、转账 lamports）
     pub system_program: Program<'info, System>,
 }
 
@@ -579,16 +582,26 @@ pub struct InitializeLottery<'info> {
 #[account]
 #[derive(InitSpace)]
 pub struct TokenLottery {
+    // PDA bump，用于验证 `token_lottery` 账户 PDA（与 seeds 一起生成 PDA）
     pub bump: u8,
+    // 抽奖的最终中奖号码（ticket 编号，对应 NFT 的种子
     pub winner: u64,
+    // 是否已经选择过中奖者，防止重复开奖
     pub winner_chosen: bool,
+    // 抽奖开始的 slot（即什么时候可以开始购票）
     pub lottery_start: u64,
+    // 抽奖结束的 slot（即什么时候截止购票 & 开始开奖）
     pub lottery_end: u64,
     // Is it good practice to store SOL on an account used for something else?
+    // 奖池累计的 SOL 总额（每张票价都会累加进来）
     pub lottery_pot_amount: u64,
+    // 当前已售出票数量，每卖出一张票就会自增（作为 ticket mint 的种子）
     pub ticket_num: u64,
+    // 每张票的价格（单位为 lamports）
     pub price: u64,
+    // 抽奖使用的 Switchboard randomness 账户地址（commit 阶段写入）
     pub randomness_account: Pubkey,
+    // 抽奖发起者 / 管理员（只有该地址可以开奖、提交 randomness）
     pub authority: Pubkey,
 }
 
