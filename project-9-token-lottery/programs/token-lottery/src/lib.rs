@@ -345,43 +345,49 @@ pub mod token_lottery {
 
 #[derive(Accounts)]
 pub struct ClaimPrize<'info> {
+    // 调用者（领奖者），需要是中奖票 NFT 的持有者，签名者
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    // token_lottery 抽奖状态账户，用于读取中奖票号、奖池金额等
+    // 使用固定种子 `"token_lottery"` 初始化，必须与购票和开奖使用的是同一个
     #[account(
         mut,
         seeds = [b"token_lottery".as_ref()],
         bump = token_lottery.bump,
     )]
     pub token_lottery: Account<'info, TokenLottery>,
-
+    // Collection NFT 的 mint（表示整个票据集合的根 mint）
+    // 用于验证中奖票是否属于该集合
     #[account(
         mut,
         seeds = [b"collection_mint".as_ref()],
         bump,
     )]
     pub collection_mint: InterfaceAccount<'info, Mint>,
-
+    // 中奖票 NFT 的 mint（即中奖的具体 NFT）
+    // 种子是：中奖票号（token_lottery.winner）对应的 ticket mint PDA
     #[account(
         seeds = [token_lottery.winner.to_le_bytes().as_ref()],
         bump,
     )]
     pub ticket_mint: InterfaceAccount<'info, Mint>,
-
+    // 中奖票 NFT 的元数据账户（用于读取 name 与 collection 信息进行校验）
     #[account(
         seeds = [b"metadata", token_metadata_program.key().as_ref(), ticket_mint.key().as_ref()],
         bump,
         seeds::program = token_metadata_program.key(),
     )]
     pub metadata: Account<'info, MetadataAccount>,
-
+    // 调用者（payer）的钱包中，与中奖票 mint 对应的 token account
+    // 要求该账户必须存在，并且持有 NFT（amount > 0）
     #[account(
         associated_token::mint = ticket_mint,
         associated_token::authority = payer,
         associated_token::token_program = token_program,
     )]
     pub destination: InterfaceAccount<'info, TokenAccount>,
-
+    // collection mint 的元数据账户
+    // 用于验证票 NFT 是否属于这个集合（collection.verified = true 且 key 匹配）
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), collection_mint.key().as_ref()],
@@ -390,8 +396,11 @@ pub struct ClaimPrize<'info> {
     )]
     pub collection_metadata: Account<'info, MetadataAccount>,
 
+    // SPL Token 程序接口（用在 token 相关操作上）
     pub token_program: Interface<'info, TokenInterface>,
+    // 系统程序（用于 lamports 转账）
     pub system_program: Program<'info, System>,
+    // Metaplex 的 Token Metadata 程序（用于验证元数据和集合归属）
     pub token_metadata_program: Program<'info, Metadata>,
 }
 
