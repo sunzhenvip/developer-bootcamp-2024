@@ -429,9 +429,12 @@ pub struct CommitWinner<'info> {
 
 #[derive(Accounts)]
 pub struct ChooseWinner<'info> {
+    // 调用者，必须是管理员（`token_lottery.authority`）
+    // 只有管理员有权限执行开奖操作
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    // 抽奖状态账户，包含票数、开奖时间、是否已开奖、中奖号码等状态
+    // 使用固定种子 `"token_lottery"` 生成
     #[account(
         mut,
         seeds = [b"token_lottery".as_ref()],
@@ -440,23 +443,27 @@ pub struct ChooseWinner<'info> {
     pub token_lottery: Account<'info, TokenLottery>,
 
     /// CHECK: The account's data is validated manually within the handler.
+    // 提交过的 Switchboard 随机数账户（必须与 commit 阶段记录的一致）
     pub randomness_account_data: UncheckedAccount<'info>,
-
+    // 系统程序（用于执行系统调用或 lamports 检查）
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct BuyTicket<'info> {
+    // 用户的钱包地址，作为购票者，需要签名并支付票价（SOL）
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    // 抽奖状态账户，记录票价、已售票数量等信息
+    // 用固定种子 `"token_lottery"` 创建，需与初始化时保持一致
     #[account(
         mut,
         seeds = [b"token_lottery".as_ref()],
         bump = token_lottery.bump
     )]
     pub token_lottery: Account<'info, TokenLottery>,
-
+    // 要 mint 出来的票据 NFT 的 mint 账户（本张票）
+    // 通过已售票数 `ticket_num` 作为种子创建
     #[account(
         init,
         payer = payer,
@@ -468,7 +475,8 @@ pub struct BuyTicket<'info> {
         mint::token_program = token_program
     )]
     pub ticket_mint: InterfaceAccount<'info, Mint>,
-
+    // 用户接收 NFT 的 Token Account，绑定票 NFT 和用户钱包
+    // 自动与 `ticket_mint` 和 `payer` 生成绑定
     #[account(
         init,
         payer = payer,
@@ -477,7 +485,8 @@ pub struct BuyTicket<'info> {
         associated_token::token_program = token_program,
     )]
     pub destination: InterfaceAccount<'info, TokenAccount>,
-
+    // 票 NFT 的 Metadata 账户（由 Metaplex 负责创建和填充）
+    // CHECK: 不由 Anchor 校验，因此必须手动初始化并验证
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), 
@@ -487,7 +496,8 @@ pub struct BuyTicket<'info> {
     )]
     /// CHECK: This account will be initialized by the metaplex program
     pub metadata: UncheckedAccount<'info>,
-
+    // Master Edition 账户（由 Metaplex 创建，标识此 NFT 为主版本）
+    // CHECK: 不由 Anchor 校验，因此必须手动初始化并验证
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), 
@@ -497,7 +507,8 @@ pub struct BuyTicket<'info> {
     )]
     /// CHECK: This account will be initialized by the metaplex program
     pub master_edition: UncheckedAccount<'info>,
-
+    // Collection NFT 的 metadata 账户（用于后续 collection 验证）
+    // CHECK: 不由 Anchor 校验
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), collection_mint.key().as_ref()],
@@ -506,7 +517,8 @@ pub struct BuyTicket<'info> {
     )]
     /// CHECK: This account will be initialized by the metaplex program
     pub collection_metadata: UncheckedAccount<'info>,
-
+    // Collection NFT 的 Master Edition 账户
+    // CHECK: 不由 Anchor 校验
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), 
@@ -516,7 +528,7 @@ pub struct BuyTicket<'info> {
     )]
     /// CHECK: This account will be initialized by the metaplex program
     pub collection_master_edition: UncheckedAccount<'info>,
-
+    // Collection 的 mint 账户（用于作为子 NFT 的 mint authority）
     #[account(
         mut,
         seeds = [b"collection_mint".as_ref()],
@@ -524,10 +536,15 @@ pub struct BuyTicket<'info> {
     )]
     pub collection_mint: InterfaceAccount<'info, Mint>,
 
+    // Anchor 所需的 Associated Token Program（用于初始化 ATA）
     pub associated_token_program: Program<'info, AssociatedToken>,
+    // SPL Token 接口（用于 mint、transfer 操作）
     pub token_program: Interface<'info, TokenInterface>,
+    // 系统程序（支付 SOL、创建账户）
     pub system_program: Program<'info, System>,
+    // Metaplex 的 Token Metadata 程序，用于创建 metadata、edition 和 collection 设置
     pub token_metadata_program: Program<'info, Metadata>,
+    // 租金账户，供系统初始化新账户时扣除租金参考
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -554,9 +571,12 @@ pub struct InitializeConifg<'info> {
 
 #[derive(Accounts)]
 pub struct InitializeLottery<'info> {
+    // 调用者，通常是管理员，支付初始化 Collection NFT 所需费用
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    /// Collection NFT 的 Mint 账户（代表所有票 NFT 的集合）
+    /// 由程序使用 `"collection_mint"` 固定种子 + bump 创建
+    /// mint authority 和 freeze authority 均设置为自身 PDA
     #[account(
         init,
         payer = payer,
@@ -568,14 +588,22 @@ pub struct InitializeLottery<'info> {
     )]
     pub collection_mint: Box<InterfaceAccount<'info, Mint>>,
 
+    /// Collection NFT 对应的 Metadata 账户（Metaplex 初始化）
+    /// 用于存储 name、symbol、uri、collection 属性
+    /// CHECK: Metaplex CPI 内部会初始化和填充此账户
     /// CHECK: This account will be initialized by the metaplex program
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
+    /// Collection NFT 的 Master Edition 账户（标记其为唯一主版本）
+    /// CHECK: 同样由 Metaplex CPI 初始化
     /// CHECK: This account will be initialized by the metaplex program
     #[account(mut)]
     pub master_edition: UncheckedAccount<'info>,
 
+    /// Collection NFT 的 Token Account（表示该 NFT 当前存在哪个账户中）
+    /// 使用固定种子 `"collection_token_account"` 创建，用于接收 mint 的 NFT
+    /// authority 设置为自己（和 mint authority 匹配）
     #[account(
         init_if_needed,
         payer = payer,
@@ -586,10 +614,15 @@ pub struct InitializeLottery<'info> {
     )]
     pub collection_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    /// SPL Token 接口（用于 mint 操作）
     pub token_program: Interface<'info, TokenInterface>,
+    /// Anchor 的 Associated Token Program，用于自动初始化 token_account（ATA）
     pub associated_token_program: Program<'info, AssociatedToken>,
+    /// 系统程序，用于创建账户/转账/分配租金等
     pub system_program: Program<'info, System>,
+    /// Metaplex Metadata 程序，用于创建 Metadata 和 Master Edition
     pub token_metadata_program: Program<'info, Metadata>,
+    /// 租金系统变量，用于创建账户时参考当前最小余额
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -621,24 +654,43 @@ pub struct TokenLottery {
 
 #[error_code]
 pub enum ErrorCode {
+    /// 用于验证 randomness_account 是否与 commit 阶段记录一致
     #[msg("Incorrect randomness account")]
     IncorrectRandomnessAccount,
+
+    /// 当前尚未达到开奖时间，禁止提前开奖
     #[msg("Lottery not completed")]
     LotteryNotCompleted,
+
+    /// 当前时间不在允许购票的时间段内（start ~ end）
     #[msg("Lottery is not open")]
     LotteryNotOpen,
+
+    /// 当前 signer 不是管理员（token_lottery.authority）
     #[msg("Not authorized")]
     NotAuthorized,
+
+    /// 提交的 randomness_account 已经被揭示过，不能重复使用
     #[msg("Randomness already revealed")]
     RandomnessAlreadyRevealed,
+
+    /// randomness_account 尚未准备好（未产生随机数或无效）
     #[msg("Randomness not resolved")]
     RandomnessNotResolved,
+
+    /// 抽奖尚未开奖，禁止领取奖金
     #[msg("Winner not chosen")]
     WinnerNotChosen,
+
+    /// 抽奖已经开奖，不能再次开奖
     #[msg("Winner already chosen")]
     WinnerChosen,
+
+    /// NFT 的 Metadata 中未标记为已加入 collection
     #[msg("Ticket is not verified")]
     NotVerifiedTicket,
+
+    /// 当前 NFT 不是中奖票（ticket 名称或 collection 验证失败）
     #[msg("Incorrect ticket")]
     IncorrectTicket,
 }
