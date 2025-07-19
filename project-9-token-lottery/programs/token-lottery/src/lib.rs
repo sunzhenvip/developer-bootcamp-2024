@@ -36,7 +36,7 @@ pub const URI: &str = "Token Lottery";
 pub const SYMBOL: &str = "TICKET";
 
 
-#[program]
+// #[program]
 pub mod token_lottery {
 
     use super::*;
@@ -54,6 +54,13 @@ pub mod token_lottery {
         Ok(())
     }
     // 创建抽奖 NFT 集合（Collection Mint + Metadata）
+    /**
+        构造 signer_seeds	后续 PDA 操作的签名凭证
+        mint_to	铸造 1 个 Collection NFT
+        create_metadata_accounts_v3	创建 NFT 元数据信息
+        create_master_edition_v3	创建主版本 NFT（Master Edition）
+        sign_metadata	使 Collection NFT 变成“已签名集合”可被子 NFT 验证关联
+    **/
     pub fn initialize_lottery(ctx: Context<InitializeLottery>) -> Result<()> {
         // 构造 PDA signer 的 seeds，用于后续 CPI 调用中授权 PDA 签名
         // Create Collection Mint
@@ -318,7 +325,7 @@ pub mod token_lottery {
         // Check if winner has been chosen
         msg!("Winner chosen: {}", ctx.accounts.token_lottery.winner_chosen);
         require!(ctx.accounts.token_lottery.winner_chosen, ErrorCode::WinnerNotChosen);
-        
+
         // Check if token is a part of the collection
         require!(ctx.accounts.metadata.collection.as_ref().unwrap().verified, ErrorCode::NotVerifiedTicket);
         require!(ctx.accounts.metadata.collection.as_ref().unwrap().key == ctx.accounts.collection_mint.key(), ErrorCode::IncorrectTicket);
