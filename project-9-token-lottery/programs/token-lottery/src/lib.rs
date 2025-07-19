@@ -277,19 +277,29 @@ pub mod token_lottery {
     }
 
     // 提交随机数结果，记录 randomness 来源
+    /**
+        该函数是整个抽奖流程中的 “提交随机数阶段”，由管理员调用：
+        确保该阶段只会提交一个新的随机数（slot 校验）；
+        使用 Switchboard 提供的 VRF 随机数；
+        随机数数据将被存储在 token_lottery 中的 randomness_account 字段，为接下来选择中奖者（choose_winner）做准备。
+    **/
     pub fn commit_a_winner(ctx: Context<CommitWinner>) -> Result<()> {
+        // 获取当前区块链的时间（包含 slot、timestamp 等信息）
         let clock = Clock::get()?;
+
+        // 获取 token_lottery 状态账户的可变引用
         let token_lottery = &mut ctx.accounts.token_lottery;
+        // 校验调用者是否为合约管理员（即 token_lottery.authority）
         if ctx.accounts.payer.key() != token_lottery.authority {
             return Err(ErrorCode::NotAuthorized.into());
         }
-
+        // 从 randomness_account_data 中解析出 Switchboard 提供的随机数结果
         let randomness_data = RandomnessAccountData::parse(ctx.accounts.randomness_account_data.data.borrow()).unwrap();
-
+        // 校验该随机数的 seed_slot 是否为上一个 slot，确保是“最新”的未被提交过的随机数
         if randomness_data.seed_slot != clock.slot - 1 {
             return Err(ErrorCode::RandomnessAlreadyRevealed.into());
         }
-
+        // 将本次随机数账户地址存储在 token_lottery 状态中，为之后选出赢家做准备
         token_lottery.randomness_account = ctx.accounts.randomness_account_data.key();
 
         Ok(())
