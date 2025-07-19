@@ -306,52 +306,79 @@ pub mod token_lottery {
     }
 
     // 基于 randomness 选择中奖票号
+    /**
+        这是 抽奖系统的开奖函数，由管理员在抽奖结束后调用。它主要实现了以下功能：
+        校验调用者身份和传入账户是否正确；
+        校验抽奖时间是否已结束；
+        使用已提交的 VRF 随机数，确定中奖票号；
+        将中奖票号写入状态并锁定不可再次开奖。
+    **/
     pub fn choose_a_winner(ctx: Context<ChooseWinner>) -> Result<()> {
+        // 获取当前 slot 和区块时间等链上时间信息
         let clock = Clock::get()?;
+        // 获取 token_lottery 状态账户的可变引用
         let token_lottery = &mut ctx.accounts.token_lottery;
 
+        // 校验传入的随机数账户是否与之前 commit 的一致
         if ctx.accounts.randomness_account_data.key() != token_lottery.randomness_account {
             return Err(ErrorCode::IncorrectRandomnessAccount.into());
         }
+        // 校验调用者是否为管理员，即 authority
         if ctx.accounts.payer.key() != token_lottery.authority {
             return Err(ErrorCode::NotAuthorized.into());
         }
+        // 检查当前是否已经到达抽奖结束 slot，确保在开奖时间之后执行
         if clock.slot < token_lottery.lottery_end {
             msg!("Current slot: {}", clock.slot);
             msg!("End slot: {}", token_lottery.lottery_end);
             return Err(ErrorCode::LotteryNotCompleted.into());
         }
+        // 检查是否已经选择过赢家，防止重复选择
         require!(token_lottery.winner_chosen == false, ErrorCode::WinnerChosen);
-
+        // 从 Switchboard 随机数账户中提取随机值（已解密）
         let randomness_data = 
             RandomnessAccountData::parse(ctx.accounts.randomness_account_data.data.borrow()).unwrap();
+        // 使用当前 slot 获取真实的随机值（reveal 阶段）
         let revealed_random_value = randomness_data.get_value(&clock)
             .map_err(|_| ErrorCode::RandomnessNotResolved)?;
-
+        // 打印随机值和票数，方便调试
         msg!("Randomness result: {}", revealed_random_value[0]);
         msg!("Ticket num: {}", token_lottery.ticket_num);
-
+        // 取随机值对票数取模，得到赢家的票号（范围：0 ~ ticket_num-1）
         let randomness_result = 
             revealed_random_value[0] as u64 % token_lottery.ticket_num;
-
+        // 打印最终赢家的票号
         msg!("Winner: {}", randomness_result);
-
+        // 将赢家票号记录到 token_lottery 中，并标记为已开奖
         token_lottery.winner = randomness_result;
         token_lottery.winner_chosen = true;
 
         Ok(())
     }
     // 	中将者领取奖池 SOL
+    /**
+        这个函数的主要职责是 验证中奖者身份 和 将奖池 SOL 奖金发送到中奖钱包，通过多个检查保证：
+        抽奖已完成；
+        用户提交了正确的 NFT；
+        NFT 属于本次抽奖的集合（Collection）；
+        用户确实持有该 NFT；
+        避免重复领奖。
+    **/
     pub fn claim_prize(ctx: Context<ClaimPrize>) -> Result<()> {
         // Check if winner has been chosen
+        // Step 1: 检查是否已经选择了中奖者
         msg!("Winner chosen: {}", ctx.accounts.token_lottery.winner_chosen);
         require!(ctx.accounts.token_lottery.winner_chosen, ErrorCode::WinnerNotChosen);
 
         // Check if token is a part of the collection
+        // Step 2: 检查 NFT 是否属于指定的 Collection 且已验证
+        // - `collection.verified`: 表示该 NFT 的 Collection 已通过验证（一般由 Collection 创建者签名）
+        // - `collection.key == collection_mint.key()`: 检查 NFT 属于本次抽奖使用的 Collection
         require!(ctx.accounts.metadata.collection.as_ref().unwrap().verified, ErrorCode::NotVerifiedTicket);
         require!(ctx.accounts.metadata.collection.as_ref().unwrap().key == ctx.accounts.collection_mint.key(), ErrorCode::IncorrectTicket);
-
+        // Step 3: 构造中奖票据名称，格式为 "Ticket" + 中奖号码，如 "Ticket42"
         let ticket_name = NAME.to_owned() + &ctx.accounts.token_lottery.winner.to_string();
+        // Step 4: 获取实际 NFT Metadata 中记录的名称（去除空字符）
         let metadata_name = ctx.accounts.metadata.name.replace("\u{0}", "");
 
 
@@ -359,12 +386,14 @@ pub mod token_lottery {
         msg!("Metdata name: {}", metadata_name);
 
         // Check if the winner has the winning ticket
+        // Step 5: 验证用户提交的 NFT 是否为中奖票据（名称匹配）
         require!(metadata_name == ticket_name, ErrorCode::IncorrectTicket);
+        // Step 6: 确保该 NFT 的持有账户（ATA）中余额大于 0，说明用户确实拥有该 NFT
         require!(ctx.accounts.destination.amount > 0, ErrorCode::IncorrectTicket);
-
+        // Step 7: 将奖池资金从合约账户（PDA）转账到中奖用户的钱包（payer）
         **ctx.accounts.token_lottery.to_account_info().try_borrow_mut_lamports()? -= ctx.accounts.token_lottery.lottery_pot_amount;
         **ctx.accounts.payer.try_borrow_mut_lamports()? += ctx.accounts.token_lottery.lottery_pot_amount;
-
+        // Step 8: 清空奖池金额，避免重复领奖
         ctx.accounts.token_lottery.lottery_pot_amount = 0;
 
         Ok(())
