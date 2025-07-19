@@ -151,15 +151,26 @@ pub mod token_lottery {
     }
 
     // 用户购票，铸造 Ticket NFT 并加入集合
+    /**
+        检查抽奖是否开放（按 slot 时间）
+        从买票人向奖池账户转账购票费用
+        使用合约 PDA 铸造一张 NFT 票
+        为 NFT 票创建元数据和 master edition
+        将 NFT 设置进集合
+        更新票号，供下次使用
+    **/
     pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
+        // 获取当前区块时间（slot）
         let clock = Clock::get()?;
+        // 根据票号生成当前票 NFT 的名称，如 "Ticket0", "Ticket1" 等
         let ticket_name = NAME.to_owned() + ctx.accounts.token_lottery.ticket_num.to_string().as_str();
-        
+        // 检查当前时间是否处于抽奖开放时间内（slot 在开始和结束之间）
         if clock.slot < ctx.accounts.token_lottery.lottery_start || 
                 clock.slot > ctx.accounts.token_lottery.lottery_end {
             return Err(ErrorCode::LotteryNotOpen.into());
         }
 
+        // 转账购票费用：将 SOL 从参与者转入奖池账户（token_lottery）
         system_program::transfer(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
@@ -170,28 +181,28 @@ pub mod token_lottery {
             ),
             ctx.accounts.token_lottery.price,
         )?;
-
+        // 累加奖池金额
         ctx.accounts.token_lottery.lottery_pot_amount += ctx.accounts.token_lottery.price;
-
+        // 构造 signer PDA 用于授权 mint 权限（collection_mint 是该合约控制的 mint PDA）
         let signer_seeds: &[&[&[u8]]] = &[&[
             b"collection_mint".as_ref(),
             &[ctx.bumps.collection_mint],
         ]];
-
+        // 使用合约 PDA authority（collection_mint）铸造 1 张票（1 个 NFT token）
         // Mint Ticket
         mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 MintTo {
-                    mint: ctx.accounts.ticket_mint.to_account_info(),
-                    to: ctx.accounts.destination.to_account_info(),
-                    authority: ctx.accounts.collection_mint.to_account_info(),
+                    mint: ctx.accounts.ticket_mint.to_account_info(), // 新票的 mint 地址
+                    to: ctx.accounts.destination.to_account_info(),  // 买票者的 token account
+                    authority: ctx.accounts.collection_mint.to_account_info(), // 授权者是 PDA
                 },
                 signer_seeds,
             ),
-            1,
+            1, // NFT 只能铸造一个单位
         )?;
-
+        // 创建该票的元数据（Metadata），包括名称、symbol、uri 等信息
         create_metadata_accounts_v3(
             CpiContext::new_with_signer(
                 ctx.accounts.token_metadata_program.to_account_info(),
@@ -200,26 +211,26 @@ pub mod token_lottery {
                     mint: ctx.accounts.ticket_mint.to_account_info(),
                     mint_authority: ctx.accounts.collection_mint.to_account_info(),
                     update_authority: ctx.accounts.collection_mint.to_account_info(),
-                    payer: ctx.accounts.payer.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(), // 创建 metadata 的费用由买票者承担
                     system_program: ctx.accounts.system_program.to_account_info(),
                     rent: ctx.accounts.rent.to_account_info(),
                 },
                 &signer_seeds,
             ),
             DataV2 {
-                name: ticket_name,
-                symbol: SYMBOL.to_string(),
-                uri: URI.to_string(),
-                seller_fee_basis_points: 0,
+                name: ticket_name,          // 票名称，如 Ticket0
+                symbol: SYMBOL.to_string(), // NFT 的 symbol（例如 "TICKET"）
+                uri: URI.to_string(),       // 指向 JSON 元数据的 URL（存储图像、描述等）
+                seller_fee_basis_points: 0, // 没有转售版税
                 creators: None,
-                collection: None,
+                collection: None,           // 稍后再设置 collection
                 uses: None,
             },
-            true,
-            true,
+            true,             // 是否可修改
+            true, // 是否是可销售的 primary sale
             None,
         )?;
-
+        // 创建 master edition（每张票是唯一 NFT，所以 edition 设为 0）
         create_master_edition_v3(
             CpiContext::new_with_signer(
                 ctx.accounts.token_metadata_program.to_account_info(),
@@ -236,9 +247,9 @@ pub mod token_lottery {
                 },
                 &signer_seeds,
             ),
-            Some(0),
+            Some(0), // edition number
         )?;
-
+        // 设置 NFT 归属某集合（用于后续统一管理，例如抽奖集合）
         // verify nft as part of collection
         set_and_verify_sized_collection_item(
             CpiContext::new_with_signer(
@@ -259,7 +270,7 @@ pub mod token_lottery {
             ),
             None,
         )?;
-
+        // 当前抽奖票数 +1（供下一票编号使用）
         ctx.accounts.token_lottery.ticket_num += 1;
 
         Ok(())
