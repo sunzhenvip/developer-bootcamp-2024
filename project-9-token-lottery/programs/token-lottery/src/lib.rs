@@ -55,68 +55,68 @@ pub mod token_lottery {
     }
     // 创建抽奖 NFT 集合（Collection Mint + Metadata）
     pub fn initialize_lottery(ctx: Context<InitializeLottery>) -> Result<()> {
-        
+        // 构造 PDA signer 的 seeds，用于后续 CPI 调用中授权 PDA 签名
         // Create Collection Mint
         let signer_seeds: &[&[&[u8]]] = &[&[
             b"collection_mint".as_ref(),
             &[ctx.bumps.collection_mint],
         ]];
-
+        // Step 1: 使用 PDA（collection_mint）铸造 1 个 token（即 Collection NFT）
         msg!("Creating mint accounts");
         mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 MintTo {
-                    mint: ctx.accounts.collection_mint.to_account_info(),
-                    to: ctx.accounts.collection_token_account.to_account_info(),
-                    authority: ctx.accounts.collection_mint.to_account_info(),
+                    mint: ctx.accounts.collection_mint.to_account_info(),  // Collection NFT 的 mint 地址
+                    to: ctx.accounts.collection_token_account.to_account_info(), // 接收铸造出的 NFT token 的账户
+                    authority: ctx.accounts.collection_mint.to_account_info(), // 使用 PDA 作为 mint authority
                 },
-                signer_seeds,
+                signer_seeds, // 声明 PDA 签名权
             ),
-            1,
+            1,  // 铸造一个 token
         )?;
-
+        // Step 2: 创建 collection NFT 的 metadata 信息（链上注册 NFT 基本信息）
         msg!("Creating metadata accounts");
         create_metadata_accounts_v3(
             CpiContext::new_with_signer(
                 ctx.accounts.token_metadata_program.to_account_info(),
                 CreateMetadataAccountsV3 {
-                    metadata: ctx.accounts.metadata.to_account_info(),
-                    mint: ctx.accounts.collection_mint.to_account_info(),
+                    metadata: ctx.accounts.metadata.to_account_info(), // 存储 metadata 数据的 PDA 账户
+                    mint: ctx.accounts.collection_mint.to_account_info(), // 对应的 mint（NFT）
                     mint_authority: ctx.accounts.collection_mint.to_account_info(), // use pda mint address as mint authority
                     update_authority: ctx.accounts.collection_mint.to_account_info(), // use pda mint as update authority
-                    payer: ctx.accounts.payer.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(), // 支付 rent 的账户
                     system_program: ctx.accounts.system_program.to_account_info(),
                     rent: ctx.accounts.rent.to_account_info(),
                 },
                 &signer_seeds,
             ),
             DataV2 {
-                name: NAME.to_string(),
-                symbol: SYMBOL.to_string(),
-                uri: URI.to_string(),
-                seller_fee_basis_points: 0,
+                name: NAME.to_string(), // NFT 名称，例如 "Token Lottery Ticket #"
+                symbol: SYMBOL.to_string(), // 代号，例如 "TICKET"
+                uri: URI.to_string(),  // 链接，通常是元数据托管在 IPFS 或 Arweave 上
+                seller_fee_basis_points: 0, // 二级市场分成，这里设为 0（无佣金）
                 creators: Some(vec![Creator {
-                    address: ctx.accounts.collection_mint.key(),
-                    verified: false,
-                    share: 100,
+                    address: ctx.accounts.collection_mint.key(), // 设置 PDA 为创建者
+                    verified: false,                             // 初始未签名
+                    share: 100,                                  // 占有 100% 权限
                 }]),
                 collection: None,
                 uses: None,
             },
-            true,
-            true,
-            Some(CollectionDetails::V1 { size: 0 }), // set as collection nft
+            true,  // is_mutable: 允许更新
+            true, // update_authority_is_signer: 是签名者
+            Some(CollectionDetails::V1 { size: 0 }), // set as collection nft  // 标记这是一个 collection 类型 NFT，初始 size = 0
         )?;
-
+        // Step 3: 创建 collection 的 Master Edition（表示该 NFT 是一个主版本）
         msg!("Creating Master edition accounts");
         create_master_edition_v3(
             CpiContext::new_with_signer(
                 ctx.accounts.token_metadata_program.to_account_info(),
                 CreateMasterEditionV3 {
-                    payer: ctx.accounts.payer.to_account_info(),
-                    mint: ctx.accounts.collection_mint.to_account_info(),
-                    edition: ctx.accounts.master_edition.to_account_info(),
+                    payer: ctx.accounts.payer.to_account_info(), // 支付 rent 的账户
+                    mint: ctx.accounts.collection_mint.to_account_info(), // mint 地址
+                    edition: ctx.accounts.master_edition.to_account_info(), // master edition PDA 地址
                     mint_authority: ctx.accounts.collection_mint.to_account_info(),
                     update_authority: ctx.accounts.collection_mint.to_account_info(),
                     metadata: ctx.accounts.metadata.to_account_info(),
@@ -128,13 +128,13 @@ pub mod token_lottery {
             ),
             Some(0),
         )?;
-
+        // Step 4: 用 collection mint PDA 对 metadata 签名，确立为 verified creator
         msg!("verifying collection");
         sign_metadata(CpiContext::new_with_signer(
             ctx.accounts.token_metadata_program.to_account_info(),
             SignMetadata {
-                creator: ctx.accounts.collection_mint.to_account_info(),
-                metadata: ctx.accounts.metadata.to_account_info(),
+                creator: ctx.accounts.collection_mint.to_account_info(), // 签名者（PDA）
+                metadata: ctx.accounts.metadata.to_account_info(),       // 要签名的 metadata
             },
             &signer_seeds,
         ))?;
