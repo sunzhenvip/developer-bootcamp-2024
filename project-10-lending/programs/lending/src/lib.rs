@@ -17,10 +17,10 @@ declare_id!("CdZeD33fXsAHfZYS8jdxg4qHgXYJwBQ1Bv6GJyETtLST");
         初始化银行 (init_bank)：为特定代币创建银行账户，设置清算阈值和最大贷款价值比率。 admin.rs:46-53
         初始化用户 (init_user)：为用户创建账户来跟踪其存款、借款和份额。 admin.rs:55-64
     2. 用户操作功能
-    存款 (deposit)：用户将资产作为抵押品存入银行，使用份额系统跟踪存款。 deposit.rs:47-97
-    借款 (borrow)：用户根据抵押品价值借入其他资产，集成 Pyth 预言机获取价格数据。 borrow.rs:54-128
-    还款 (repay)：用户偿还借入的资产。 repay.rs:44-105
-    提取 (withdraw)：用户提取存入的抵押品。 withdraw.rs:49-102
+        存款 (deposit)：用户将资产作为抵押品存入银行，使用份额系统跟踪存款。 deposit.rs:47-97
+        借款 (borrow)：用户根据抵押品价值借入其他资产，集成 Pyth 预言机获取价格数据。 borrow.rs:54-128
+        还款 (repay)：用户偿还借入的资产。 repay.rs:44-105
+        提取 (withdraw)：用户提取存入的抵押品。 withdraw.rs:49-102
     3. 清算功能
         清算 (liquidate)：当用户的健康因子低于 1 时，清算人可以清算抵押不足的头寸，获得清算奖励。 liquidate.rs:73-136
     核心概念
