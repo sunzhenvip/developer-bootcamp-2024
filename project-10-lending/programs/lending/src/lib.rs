@@ -35,6 +35,7 @@ declare_id!("CdZeD33fXsAHfZYS8jdxg4qHgXYJwBQ1Bv6GJyETtLST");
 
     这是一个教育性质的简化借贷协议，仅支持 SOL 和 USDC 两种资产，包含基本的借贷、清算机制
     但缺少生产环境所需的完整安全措施和复杂的利率模型。协议使用 Anchor 框架开发，集成了 Pyth 预言机进行价格获取。
+    Setup accounts
 */
 
 #[program]
