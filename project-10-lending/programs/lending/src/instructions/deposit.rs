@@ -116,6 +116,8 @@ pub fn process_deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
 
     // ========== 步骤 4: 更新银行全局状态 ==========
     // 更新银行的总存款和总份额
+    // 这种设计是DeFi协议中常见的份额机制，类似于传统金融中的基金份额概念。通过份额系统，协议可以高效地处理利息分配，
+    // 而不需要频繁更新每个用户的账户余额，这在区块链环境中非常重要，因为每次状态更新都需要消耗gas费用。
     bank.total_deposits += amount;
     bank.total_deposit_shares += users_shares;
 
