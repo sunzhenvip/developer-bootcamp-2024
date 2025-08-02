@@ -68,35 +68,58 @@ pub struct Liquidate<'info> {
 // 2. Calculate liquidation amount
 // 3. Make a CPI transfer from the user's token account to the bank's token account
 // 4. Update the user and bank states
-// 5. Handle fees and rewards 
+// 5. Handle fees and rewards
+// 1. 检查用户是否抵押不足
+// 2. 计算清算金额
+// 3. 从用户的代币账户向银行的代币账户进行 CPI 转账
+// 4. 更新用户和银行状态
+// 5. 处理费用和奖励
+/*清算机制核心逻辑
+健康因子检查： liquidate.rs:87-94
+价格获取： liquidate.rs:79-83
+清算金额计算： liquidate.rs:96
+双向代币转账： liquidate.rs:100-133
+*/
 
-pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> { 
+pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
+    // 获取抵押品银行和用户账户的可变引用
     let collateral_bank = &mut ctx.accounts.collateral_bank;
     let user = &mut ctx.accounts.user_account;
 
+    // 获取价格更新账户的可变引用
     let price_update = &mut ctx.accounts.price_update;
 
+    // 获取 SOL 和 USDC 的价格预言机 Feed ID
     let sol_feed_id = get_feed_id_from_hex(SOL_USD_FEED_ID)?; 
     let usdc_feed_id = get_feed_id_from_hex(USDC_USD_FEED_ID)?;
 
+    // 从 Pyth 预言机获取 SOL 和 USDC 的实时价格
     let sol_price = price_update.get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &sol_feed_id)?;
     let usdc_price = price_update.get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &usdc_feed_id)?;
 
-    // Note: For simplicity, interest is not being included in these calculations. 
+    // Note: For simplicity, interest is not being included in these calculations.
+    // 注意：为了简化，这些计算中不包括利息
 
+    // 计算用户的总抵押品价值（SOL 价值 + USDC 价值）
     let total_collateral = (sol_price.price as u64 * user.deposited_sol) + (usdc_price.price as u64 * user.deposited_usdc);
-    let total_borrowed = (sol_price.price as u64 * user.borrowed_sol) + (usdc_price.price as u64 * user.borrowed_usdc);    
+    // 计算用户的总借贷价值（SOL 借贷 + USDC 借贷）
+    let total_borrowed = (sol_price.price as u64 * user.borrowed_sol) + (usdc_price.price as u64 * user.borrowed_usdc);
 
+    // 计算健康因子 = (总抵押品 × 清算阈值) / 总借贷
     let health_factor = (total_collateral * collateral_bank.liquidation_threshold)/total_borrowed;
 
+    // 如果健康因子 >= 1，说明抵押充足，不能被清算
     if health_factor >= 1 {
         return Err(ErrorCode::NotUndercollateralized.into());
     }
 
+    // 计算清算金额 = 总借贷 × 清算关闭因子
     let liquidation_amount = total_borrowed * collateral_bank.liquidation_close_factor;
 
-    // liquidator pays back the borrowed amount back to the bank 
+    // liquidator pays back the borrowed amount back to the bank
+    // 清算人偿还借贷金额给银行
 
+    // 设置从清算人向银行转账的 CPI 账户结构
     let transfer_to_bank = TransferChecked {
         from: ctx.accounts.liquidator_borrowed_token_account.to_account_info(),
         mint: ctx.accounts.borrowed_mint.to_account_info(),
@@ -104,15 +127,20 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
         authority: ctx.accounts.liquidator.to_account_info(),
     };
 
+    // 获取代币程序引用并创建 CPI 上下文
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx_to_bank = CpiContext::new(cpi_program.clone(), transfer_to_bank);
     let decimals = ctx.accounts.borrowed_mint.decimals;
 
+    // 执行代币转账，清算人向银行偿还借贷
     token_interface::transfer_checked(cpi_ctx_to_bank, liquidation_amount, decimals)?;
 
     // Transfer liquidation value and bonus to liquidator
+    // 将清算价值和奖励转给清算人
+    // 计算清算奖励 = (清算金额 × 清算奖励比例) + 清算金额
     let liquidation_bonus = (liquidation_amount * collateral_bank.liquidation_bonus) + liquidation_amount;
-    
+
+    // 设置从银行向清算人转账抵押品的 CPI 账户结构
     let transfer_to_liquidator = TransferChecked {
         from: ctx.accounts.collateral_bank_token_account.to_account_info(),
         mint: ctx.accounts.collateral_mint.to_account_info(),
@@ -120,6 +148,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
         authority: ctx.accounts.collateral_bank_token_account.to_account_info(),
     };
 
+    // 设置 PDA 签名种子，用于银行抵押品代币账户的授权
     let mint_key = ctx.accounts.collateral_mint.key();
     let signer_seeds: &[&[&[u8]]] = &[
         &[
@@ -128,8 +157,10 @@ pub fn process_liquidate(ctx: Context<Liquidate>) -> Result<()> {
             &[ctx.bumps.collateral_bank_token_account],
         ],
     ];
+    // 创建带有签名者的 CPI 上下文
     let cpi_ctx_to_liquidator = CpiContext::new(cpi_program.clone(), transfer_to_liquidator).with_signer(signer_seeds);
-    let collateral_decimals = ctx.accounts.collateral_mint.decimals;   
+    let collateral_decimals = ctx.accounts.collateral_mint.decimals;
+    // 执行代币转账，将抵押品和奖励转给清算人
     token_interface::transfer_checked(cpi_ctx_to_liquidator, liquidation_bonus, collateral_decimals)?;
 
     Ok(())
