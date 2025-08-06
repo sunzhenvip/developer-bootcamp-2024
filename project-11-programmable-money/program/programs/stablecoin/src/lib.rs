@@ -13,6 +13,36 @@ declare_id!("6DjiD8tQhJ9ZS3WZrwNubfoBRBrqfWacNR3bXBQ7ir91");
 
 
 /**
+project-11-programmable-money和project-10-lending是两个不同类型的DeFi协议，主要区别如下：
+
+核心功能差异
+Project 10 (Lending Protocol) 是一个传统的借贷协议，支持多种操作： lib.rs:16-42
+存款 (deposit) - 用户存入资产作为抵押品
+借款 (borrow) - 用户借出其他资产
+还款 (repay) - 偿还借款
+提取 (withdraw) - 提取抵押品
+清算 (liquidate) - 清算不良头寸
+
+Project 11 (Programmable Money) 是一个稳定币铸造协议，功能更加专注： idlType.ts:483-517
+初始化和更新配置
+存入抵押品并铸造稳定币
+销毁稳定币并赎回抵押品
+清算不良头寸
+业务模式差异
+Lending Protocol 允许用户借入不同于抵押品的资产。例如，用户可以存入USDC作为抵押品，然后借出SOL： borrow.rs:63-76
+
+Programmable Money 只允许用户铸造稳定币。用户存入SOL作为抵押品，只能铸造出协议的原生稳定币，不能借出其他资产。
+
+账户结构差异
+Lending Protocol使用更复杂的用户状态管理，跟踪多种资产的存款和借款： state.rs:32-59
+
+而Programmable Money的配置结构更简单，主要关注稳定币铸造的参数： idlType.ts:488-514
+
+风险管理差异
+两个协议都使用健康因子和清算机制，但Lending Protocol的清算逻辑更复杂，需要处理多种资产间的转换： liquidate.rs:87-96
+Project 10是一个通用的多资产借贷平台，而Project 11是一个专门的稳定币协议。两者都是教育性项目，展示了DeFi协议的不同设计模式。
+Lending协议更接近Aave等传统借贷平台，而Programmable Money更类似MakerDAO的稳定币系统。
+
 是一个基于 Solana 的稳定币协议，实现了以下核心功能：
 抵押品存入和稳定币铸造：用户可以存入 SOL 作为抵押品并铸造稳定币
 健康因子监控：通过价格预言机监控抵押率，确保系统安全
