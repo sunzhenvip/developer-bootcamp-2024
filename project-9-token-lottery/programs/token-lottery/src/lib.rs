@@ -35,8 +35,78 @@ pub const URI: &str = "Token Lottery";
 #[constant]
 pub const SYMBOL: &str = "TICKET";
 
+/**
+这个合约主要实现了一个基于 Solana NFT 的链上抽奖系统
+这个合约让商家或项目方可以在 Solana 链上举办一次完整的抽奖活动，用户购买 NFT 门票参与，系统在活动结束后自动、透明地抽取并发放奖金。
+业务价值
+    链上透明：所有购票、抽奖、奖金发放过程都在链上可查，防止暗箱操作。
+    防伪防篡改：门票 NFT 与抽奖集合绑定，且元数据和验证状态由链上程序控制，无法伪造。
+    防作弊：使用 Switchboard 的链上随机数，确保抽奖结果公平。
+    一次性活动管理：可以按期配置，每期都有独立的集合 NFT 与门票 NFT，方便管理多期抽奖。
+程序基于 Solana 区块链，使用 Anchor 框架实现了一个完整的彩票系统，主要功能如下：
+1. 彩票初始化（Initialize）
+    设置彩票参数：
+        1、彩票开始时间（lottery_start）和结束时间（lottery_end）
+        2、每张彩票的价格（price）
+        3、彩票池初始金额（lottery_pot_amount）
+        4、彩票管理者（authority）
+    创建 NFT 集合（Collection NFT）：
+        1、使用 Metaplex Token Metadata 标准创建 NFT 集合
+        2、设置集合名称（NAME）、符号（SYMBOL）和 URI（URI）
+        3、生成 Master Edition（确保 NFT 唯一性）
+2. 购买彩票（Buy Ticket）
+    用户支付 SOL 购买彩票：
+        1、检查彩票是否在开放时间内（lottery_start ≤ 当前时间 ≤ lottery_end）
+        2、支付 SOL 到彩票池（lottery_pot_amount 增加）
+    生成彩票 NFT：
+        1、每张彩票是一个 NFT，名称格式为 Token Lottery Ticket #X（X 是序号）
+        2、彩票 NFT 属于之前创建的 Collection NFT（确保可验证）
+        3、使用 Metaplex 标准 生成 NFT 元数据和 Master Edition
+3. 提交随机数（Commit Randomness）
+    使用 Switchboard 随机数服务：
+        1、通过 RandomnessAccountData 获取链上随机数
+        2、确保随机数是 最新且未被使用 的（seed_slot == current_slot - 1）
+        3、存储随机数账户地址（randomness_account）
+4. 选择中奖者（Choose Winner）
+    验证彩票是否结束：
+        1、检查当前时间是否超过 lottery_end
+        2、确保 尚未选出中奖者（winner_chosen == false）
+    计算中奖者：
+        1、使用 Switchboard 随机数 对彩票总数取模（random_value % ticket_num）
+        2、记录中奖者编号（winner）并标记已开奖（winner_chosen = true）
+5. 领取奖金（Claim Prize）
+    验证中奖者：
+        1、检查是否已开奖（winner_chosen == true）
+        2、检查用户持有的 NFT 是否属于 Collection NFT（metadata.collection.verified）
+        3、检查 NFT 名称是否匹配中奖编号（Token Lottery Ticket #X）
+    发放奖金：
+        1、将彩票池的 SOL 转给中奖者
+        2、清空彩票池（lottery_pot_amount = 0）
+6. 错误处理（Error Handling）
+    定义多种错误情况，如：
+        LotteryNotOpen（彩票未开放）
+        LotteryNotCompleted（彩票未结束）
+        WinnerNotChosen（尚未开奖）
+        NotVerifiedTicket（NFT 未验证）
+        IncorrectTicket（非中奖 NFT）
+总结
+    1、你的程序实现了一个 去中心化彩票系统，主要流程包括：
+    2、初始化彩票参数
+    3、用户购买 NFT 彩票
+    4、链上随机数开奖
+    5、中奖者领取奖金
+优点：
+✅ 使用 NFT 作为彩票，确保唯一性和可验证性
+✅ 结合 Switchboard 随机数，保证公平性
+✅ 完整的状态管理（开奖、奖金发放）
+可能的改进：
+🔹 支持 多期彩票（目前只能运行一期）
+🔹 增加 手续费机制（部分 SOL 作为平台收益）
+🔹 优化 随机数获取方式（如改用 Chainlink VRF）
+整体来说，代码结构清晰，功能完整，是一个不错的 Solana 彩票系统实现！
+**/
 
-// #[program]
+#[program]
 pub mod token_lottery {
 
     use super::*;
