@@ -1,3 +1,5 @@
+// 消除某些编译警告
+#![allow(unexpected_cfgs)]
 pub mod constants;
 pub mod error;
 pub mod instructions;
