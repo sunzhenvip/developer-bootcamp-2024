@@ -47,6 +47,8 @@ pub mod swap {
         token_a_offered_amount: u64,
         token_b_wanted_amount: u64,
     ) -> Result<()> {
+        // 这两个函数是 make_offer 指令的核心组成部分，按顺序执行以确保代币安全托管和报价信息正确保存。
+        // send_offered_tokens_to_vault 负责资产托管，而 save_offer 负责数据持久化，两者缺一不可。
         instructions::make_offer::send_offered_tokens_to_vault(&context, token_a_offered_amount)?;
         instructions::make_offer::save_offer(context, id, token_b_wanted_amount)
     }
