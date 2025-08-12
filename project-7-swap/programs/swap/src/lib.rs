@@ -54,6 +54,8 @@ pub mod swap {
     }
 
     pub fn take_offer(context: Context<TakeOffer>) -> Result<()> {
+        // 首先调用 send_wanted_tokens_to_maker 将接受者的代币发送给制造者
+        // 然后调用 withdraw_and_close_vault 将金库中的代币提取给接受者并关闭金库
         instructions::take_offer::send_wanted_tokens_to_maker(&context)?;
         instructions::take_offer::withdraw_and_close_vault(context)
     }
