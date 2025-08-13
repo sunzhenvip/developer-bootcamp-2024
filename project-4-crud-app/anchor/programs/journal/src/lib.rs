@@ -1,3 +1,5 @@
+// 消除某些编译警告
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 
 // This is your program's public key and it will update
