@@ -4,16 +4,24 @@ use anchor_lang::prelude::*;
 
 declare_id!("5iRyM4LPFo5TZF3SzMqmaFzGhBdNm3mq3v7nVdBcSRpN");
 
+/**
+    与之前的project-3-blinks版本相比，增加了时间验证功能。
+    vote在投票时会检查当前时间是否在投票的有效时间范围内，并使用自定义错误代码来处理时间相关的错误情况。
+    所有账户都使用PDA确保唯一性和安全性。
+    https://deepwiki.com/search/project4crudapp-anchorprograms_8ca77df3-bfac-4c81-a667-d0f68815fe00
+**/
 #[program]
 pub mod voting {
     use super::*;
 
-    pub fn initialize_poll(ctx: Context<InitializePoll>, 
-                            _poll_id: u64, 
-                            start_time: u64, 
-                            end_time: u64,
-                            name: String,
-                            description: String) -> Result<()> {
+    pub fn initialize_poll(
+        ctx: Context<InitializePoll>,
+        _poll_id: u64,
+        start_time: u64,
+        end_time: u64,
+        name: String,
+        description: String,
+    ) -> Result<()> {
         ctx.accounts.poll_account.poll_name = name;
         ctx.accounts.poll_account.poll_description = description;
         ctx.accounts.poll_account.poll_voting_start = start_time;
@@ -21,9 +29,11 @@ pub mod voting {
         Ok(())
     }
 
-    pub fn initialize_candidate(ctx: Context<InitializeCandidate>, 
-                                _poll_id: u64, 
-                                candidate: String) -> Result<()> {
+    pub fn initialize_candidate(
+        ctx: Context<InitializeCandidate>,
+        _poll_id: u64,
+        candidate: String,
+    ) -> Result<()> {
         ctx.accounts.candidate_account.candidate_name = candidate;
         ctx.accounts.poll_account.poll_option_index += 1;
         Ok(())
@@ -45,7 +55,6 @@ pub mod voting {
 
         Ok(())
     }
-    
 }
 
 #[derive(Accounts)]
@@ -116,7 +125,7 @@ pub struct CandidateAccount {
 
 #[account]
 #[derive(InitSpace)]
-pub struct PollAccount{
+pub struct PollAccount {
     #[max_len(32)]
     pub poll_name: String,
     #[max_len(280)]
