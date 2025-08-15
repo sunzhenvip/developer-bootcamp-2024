@@ -13,8 +13,6 @@ pub use state::*;
 
 declare_id!("DAehvmx2vZoWCJi7Qo3Y4YF5vrEWHQRJ288kqKwDy5DV");
 
-
-
 /**
     允许用户在两种不同的代币之间进行点对点交换
     1. 创建交换报价 (Make Offer)
