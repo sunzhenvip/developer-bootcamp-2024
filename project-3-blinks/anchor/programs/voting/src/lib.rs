@@ -127,7 +127,7 @@ pub struct InitializePoll<'info> {
     pub system_program: Program<'info, System>, // 系统程序，用于创建账户
 }
 
-// 投票数据结构
+// 投票数据结构(表示投票池 一个有多个投票事件)
 #[account] // Anchor宏，标记这是一个账户数据结构体
 #[derive(InitSpace)] // 自动计算结构体所需的存储空间
 pub struct Poll {
