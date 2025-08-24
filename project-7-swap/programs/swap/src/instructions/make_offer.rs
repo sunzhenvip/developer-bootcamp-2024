@@ -61,7 +61,21 @@ pub struct MakeOffer<'info> {
     pub vault: InterfaceAccount<'info, TokenAccount>, // 托管账户：用于存储报价创建者的代币A(是 offer PDA 的 ATA 账户)
 
     pub system_program: Program<'info, System>,
+    // 这是 SPL Token 程序 使用 transfer、mint_to、burn、close_account 操作必须增加这个属性
     pub token_program: Interface<'info, TokenInterface>,
+    /**
+    这是 Associated Token Account (ATA) 程序，专门用来：
+        创建 标准的 ATA（get_associated_token_address(owner, mint) 生成的地址）。
+        在代码里，它主要在 vault 和 maker_token_account_a 的初始化阶段用到：
+        associated_token::mint = token_mint_a,
+        associated_token::authority = offer,
+        associated_token::token_program = token_program
+    当 vault 不存在时，由 associated_token_program 自动创建。
+    创建时 authority 字段会被设为 offer PDA，以后这个 ATA 的“owner 权限”就属于 offer PDA 了。
+    ⚠️ 注意：
+        associated_token_program 本身 不会进行转账，它只负责创建 ATA；
+        转账还是要走 token_program
+    **/
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
