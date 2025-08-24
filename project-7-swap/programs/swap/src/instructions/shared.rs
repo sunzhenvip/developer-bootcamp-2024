@@ -19,6 +19,9 @@ pub fn transfer_tokens<'info>(
         to: to.to_account_info(),     // 将目标账户转换为 AccountInfo 类型
         authority: authority.to_account_info(), // 将授权者转换为 AccountInfo 类型
     };
+    // CpiContext::new 适合用户自己转账，用户主动发起的转账
+    // CpiContext::new_with_signer 需要手动构造 signer_seeds 构造 PDA 的签名(因为 PDA 是由种子和 bump 推导出来的)
+    // 适合 合约自己控制的账户转账（比如 vault → 用户，vault → 另一个 vault）。
     // 创建跨程序调用（CPI）上下文，用于调用 SPL Token 程序
     let cpi_context = CpiContext::new(
         token_program.to_account_info(), // SPL Token 程序

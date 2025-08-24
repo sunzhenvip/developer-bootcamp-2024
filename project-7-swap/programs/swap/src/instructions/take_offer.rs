@@ -104,6 +104,10 @@ pub fn withdraw_and_close_vault(context: Context<TakeOffer>) -> Result<()> {
         mint: context.accounts.token_mint_a.to_account_info(),        // A 代币的铸币账户
         authority: context.accounts.offer.to_account_info(),          // 授权账户：报价 PDA
     };
+    // CpiContext::new 适合用户自己转账，用户主动发起的转账
+    // CpiContext::new_with_signer 需要手动构造 signer_seeds 构造 PDA 的签名(因为 PDA 是由种子和 bump 推导出来的)
+    // 适合 合约自己控制的账户转账（比如 vault → 用户，vault → 另一个 vault）。
+    // 创建跨程序调用（CPI）上下文，用于调用 SPL Token 程序
     // 创建带签名的跨程序调用上下文
     let cpi_context = CpiContext::new_with_signer(
         context.accounts.token_program.to_account_info(),
