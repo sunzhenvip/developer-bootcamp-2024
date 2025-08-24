@@ -181,7 +181,7 @@ pub struct CreateEmployeeAccount<'info> {
     #[account(mut)]
     pub owner: Signer<'info>, // 公司账户（必须是 vesting_account.owner）
     pub beneficiary: SystemAccount<'info>, // 员工的钱包地址
-    #[account(has_one = owner)]
+    #[account(has_one = owner)] // 判断 owner 是否是 vesting_account 的 owner(两个字段名需相同否则不能这么写)
     pub vesting_account: Account<'info, VestingAccount>, // 公司 vesting 信息
     #[account(
         init,
