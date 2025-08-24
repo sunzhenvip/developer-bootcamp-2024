@@ -37,6 +37,20 @@ pub struct MakeOffer<'info> {
     )]
     pub offer: Account<'info, Offer>,
 
+
+    /**
+    为什么 PDA 需要 ATA？
+        PDA 本身是一个通用数据账户，它可以存储任何数据。但是，如果你希望这个
+        PDA持有某种 SPL 代币（例如，USDC, SOL, 或其他自定义代币），你就必须为这个 PDA 创建一个 ATA。
+    一个生动的例子：质押农场（Staking Farm）
+        假设你有一个质押程序：
+            1、用户将他们的 ABC 代币质押到程序中以获取奖励。 程序需要找一个安全的地方来保管这些用户质押的 ABC 代币。
+            2、你不能把它们放在用户的 ATA 里，因为用户随时可以转走。你也不能把它们放在程序账户里，因为程序账户本身不能持有代币。
+    **/
+    // 用于存放出价人锁定的代币 A 的金库账户。
+    // 这个 ATA 的 owner(所有者) = offer PDA(是offer生成的PDA)，即由合约控制(相当于存在合约中了，只能合约触发才能取出钱)，不由用户直接掌握。
+    // 这样做是为了保证挂单的代币安全，直到交易达成或取消。
+    // associated_token::authority 等于 offer 就是权限的管理者 属于 offer 的 seeds 地址(也就是PDA地址的ATA)
     #[account(
         init,
         payer = maker,
@@ -44,7 +58,7 @@ pub struct MakeOffer<'info> {
         associated_token::authority = offer,
         associated_token::token_program = token_program
     )]
-    pub vault: InterfaceAccount<'info, TokenAccount>,
+    pub vault: InterfaceAccount<'info, TokenAccount>, // 托管账户：用于存储报价创建者的代币A(是 offer PDA 的 ATA 账户)
 
     pub system_program: Program<'info, System>,
     pub token_program: Interface<'info, TokenInterface>,
