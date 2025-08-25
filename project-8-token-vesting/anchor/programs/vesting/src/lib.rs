@@ -94,6 +94,10 @@ pub mod vesting {
             return Err(ErrorCode::ClaimNotAvailableYet.into());
         }
 
+
+        // 领取代笔释放示意图 (线性释放 下方代码表达的是这个意思)
+        // start_time ---------------- cliff_time ---------------- end_time
+        //     (0%)       悬崖期      (一次性释放累计的)    (之后按比例线性释放)
         // 计算已归属的代币数量
         // Calculate the vested amount
         let time_since_start = now.saturating_sub(employee_account.start_time);  // 计算从开始时间到现在的时长
@@ -268,3 +272,18 @@ pub enum ErrorCode {
     #[msg("There is nothing to claim.")]
     NothingToClaim, // 没有可提取的代币（已全部提取或尚未归属）
 }
+
+
+/***
+    “cliff_time + 线性释放” 这种模式一般在哪些业务场景会用到：
+    常见业务场景
+        员工/团队代币激励（Token Vesting for Team/Advisors）
+            背景：团队/顾问持有的代币通常会锁仓，防止他们一上线就全部卖掉砸盘。
+            应用：
+                start_time = 合约部署时（锁仓开始）
+                cliff_time = 6 个月（6 个月之前不释放）
+                end_time = 48 个月（之后按月/按区块线性释放）
+            效果：
+                6 个月 cliff 到达 → 一次性释放前 6 个月应得的代币
+                之后 42 个月 → 每个月释放一部分
+**/
