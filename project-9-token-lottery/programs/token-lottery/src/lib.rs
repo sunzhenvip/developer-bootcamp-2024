@@ -852,3 +852,41 @@ pub enum ErrorCode {
     #[msg("Incorrect ticket")]
     IncorrectTicket,
 }
+
+
+/***
+    在 Solana 上没有 Chainlink Automation 这种「官方统一服务」，但有几种替代方案：
+
+    Clockwork → 原生的自动调度协议（最接近 Chainlink Automation）。
+
+    Switchboard Crank → 结合 RNG 的自动化触发，和你现有代码完美配合。
+
+    自建 bot → 监听链上事件，到点发交易（最常见，灵活）。
+
+    正是这种工具可以帮你触发刚才提到的 commit_a_winner、choose_a_winner、claim_prize 这些函数。
+
+    在 Solana 生态里，智能合约（Program）不会自动执行，只能在有外部交易时被调用。所以要实现“自动化执行”，
+    就需要借助类似 定时执行器 / 自动化服务 来替代 Chainlink Automation 的角色。
+
+    常见方式有：
+
+    1、Switchboard Functions（推荐）
+        类似 Chainlink Automation 的 “keeper” 机制。
+        你可以定义一个条件（比如到达开奖时间），让 Switchboard 在链下监控，当条件满足时，它会发起一个交易，调用你的 commit_a_winner 或 choose_a_winner。
+        好处是和 Solana 原生集成，已经有人用它做定时开奖、清算等逻辑。
+
+    2、Cronos / Clockwork（去中心化调度）
+        允许你在链上定义一个 “Cron job”，比如“每天 20:00 调用我的 choose_a_winner”。
+        Clockwork 会确保有人帮你发交易触发。
+
+    3、自己搭建 Off-chain Worker（中心化方式）
+        写个脚本（Rust / Go / JS），跑在服务器上。
+        脚本定时检查链上状态（比如开奖时间），然后用管理员的钱包发起交易，调用 choose_a_winner。
+        缺点是去中心化不足，但最容易实现。
+
+    🔑 总结：
+    你提到的这些函数 不会自动执行，必须有人发交易。
+    → 在 Solana 里，可以用 Switchboard Functions 或 Clockwork 这样的自动化工具来代替 Chainlink Automation。
+    → 如果不想依赖外部服务，也可以写个 后台脚本 来定时触发。
+    要不要我给你写一个 基于 Switchboard Functions 定时触发 choose_a_winner 的示例？
+ */
