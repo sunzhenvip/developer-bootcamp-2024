@@ -131,6 +131,20 @@ pub mod token_lottery {
         create_master_edition_v3	创建主版本 NFT（Master Edition）
         sign_metadata	使 Collection NFT 变成“已签名集合”可被子 NFT 验证关联
         这是创建的一个 Collection NFT 集合 类型的 NFT
+        initialize_lottery
+            这个函数是 管理员调用 的，用来初始化整个抽奖活动。
+            它主要做了几件事：
+        1、创建集合 NFT（Collection Mint）
+            生成一个 collection_mint，这是集合的 Mint 地址，相当于 NFT 集合的「根」。
+            并且给集合 mint 铸造 1 个 token（存在 collection_token_account）。
+        2、创建集合的 Metadata
+            通过 create_metadata_accounts_v3，把集合 NFT 的名字、符号、URI 等信息写入链上。
+            设置 CollectionDetails::V1 { size: 0 }，明确这是一个 集合 NFT。
+        3、创建集合的 Master Edition
+            调用 create_master_edition_v3，说明这是个 不可再分割的集合 NFT（master edition）。
+        4、签名确认集合 NFT
+            通过 sign_metadata 给集合 NFT 签名，确认它的合法性。
+        总结：initialize_lottery 的结果就是创建了一个 集合 NFT，所有用户之后买的票（Ticket NFT）都会属于这个集合。
     **/
     pub fn initialize_lottery(ctx: Context<InitializeLottery>) -> Result<()> {
         // 构造 PDA signer 的 seeds，用于后续 CPI 调用中授权 PDA 签名
@@ -229,6 +243,22 @@ pub mod token_lottery {
         为 NFT 票创建元数据和 master edition
         将 NFT 设置进集合
         更新票号，供下次使用
+        buy_ticket 这个函数是 用户调用 的，用来购买抽奖票 NFT。 它做的事情是：
+        1、用户支付门票价
+            通过 system_program::transfer 把 SOL 转到 token_lottery 账户里，形成奖池。
+        2、创建票据 NFT（Ticket Mint）
+            为每个用户买的票生成一个新的 ticket_mint，即 Ticket NFT 的 mint 地址。
+            这个票 NFT 的名字是 "Token Lottery Ticket #<编号>"。
+        3、创建票据的 Metadata + Master Edition
+            每个 Ticket NFT 都有自己的 Metadata（名字、符号、URI 等）。
+            也会创建 Master Edition。
+        4、把 Ticket NFT 验证为集合的一部分
+            调用 set_and_verify_sized_collection_item，把刚创建的 Ticket NFT 加入到之前 initialize_lottery 创建的集合里。
+            这样 Ticket NFT 就「挂靠」在集合 NFT 下面了。
+        👉 总结：每次用户调用 buy_ticket，都会生成一个新的 Ticket NFT，它属于 initialize_lottery 创建的集合。
+        5、你的理解可以这样归纳：
+            管理员端：initialize_lottery 创建 集合 NFT（相当于标签/父类）。
+            用户端：buy_ticket 购买一个 票据 NFT，并且自动挂到集合 NFT 下面。
     **/
     pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         // 获取当前区块时间（slot）
