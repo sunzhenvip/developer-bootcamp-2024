@@ -130,6 +130,7 @@ pub mod token_lottery {
         create_metadata_accounts_v3	创建 NFT 元数据信息
         create_master_edition_v3	创建主版本 NFT（Master Edition）
         sign_metadata	使 Collection NFT 变成“已签名集合”可被子 NFT 验证关联
+        这是创建的一个 Collection NFT 集合 类型的 NFT
     **/
     pub fn initialize_lottery(ctx: Context<InitializeLottery>) -> Result<()> {
         // 构造 PDA signer 的 seeds，用于后续 CPI 调用中授权 PDA 签名
