@@ -383,6 +383,24 @@ pub mod token_lottery {
         确保该阶段只会提交一个新的随机数（slot 校验）；
         使用 Switchboard 提供的 VRF 随机数；
         随机数数据将被存储在 token_lottery 中的 randomness_account 字段，为接下来选择中奖者（choose_winner）做准备。
+        我有一个随机数种子，先存档
+        随机种子（Random Seed）在抽奖里的作用
+            1、随机种子 = 一个不可预测的随机值（来自 Switchboard VRF / Chainlink VRF 等）。
+            2、每次抽奖 生成新的随机种子，用它去确定赢家。
+        这样做的好处：
+        1、避免重复开奖
+            如果不换随机数，每次调用 choose_a_winner 都可能得到同样的结果。
+            每次生成新的随机数，保证每次开奖都是独立随机事件。
+        2、防止操纵 / 提前知道结果
+            commit-reveal 模式：先提交随机数账户（commit_a_winner），再根据随机数选中奖者（choose_a_winner）。
+            在随机数提交前，没人能预测谁会中奖。
+        3、保证公平性
+            随机数和票号（用户）通过取模映射，保证每张票有相同概率中奖。
+        4、流程总结
+            1、用户买票 → 分配票号（ticket_num 自增）
+            2、管理员 / 自动化触发随机数生成 → commit_a_winner 提交随机种子
+            3、随机数生成完成 → choose_a_winner 根据随机数计算中奖票号
+            4、中奖用户调用 claim_prize 领取奖励
     **/
     pub fn commit_a_winner(ctx: Context<CommitWinner>) -> Result<()> {
         // 获取当前区块链的时间（包含 slot、timestamp 等信息）
