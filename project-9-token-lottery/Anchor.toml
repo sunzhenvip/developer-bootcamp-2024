@@ -5,17 +5,31 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-token_lottery = "2RTh2Y4e2N421EbSnUYTKdGqDHJH7etxZb3VrWDMpNMY"
+token_lottery = "7FzPbWJ1eMVTT8YhhzvgJ1H8Yo2AZ76L7xn7ddGA5uyz"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+# npm i -D ts-mocha(package.json如果有不需要在执行)
+# npm install --save-dev mocha((package.json如果有不需要在执行))
+# 运行命令 anchor run tokenlottery
+tokenlottery = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/token-lottery.ts"
+
+[test]
+startup_wait = 5000
+shutdown_wait = 2000
+upgradeable = false
+
+[test.validator]
+bind_address = "127.0.0.1"
+ledger = ".anchor/test-ledger"
+rpc_port = 8899
 
 [[test.validator.clone]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
