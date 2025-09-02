@@ -26,7 +26,7 @@ use mpl_token_metadata::types::{
 };
 
 
-declare_id!("2RTh2Y4e2N421EbSnUYTKdGqDHJH7etxZb3VrWDMpNMY");
+declare_id!("7FzPbWJ1eMVTT8YhhzvgJ1H8Yo2AZ76L7xn7ddGA5uyz");
 
 #[constant]
 pub const NAME: &str = "Token Lottery Ticket #";
