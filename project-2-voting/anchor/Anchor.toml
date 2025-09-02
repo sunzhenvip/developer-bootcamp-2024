@@ -5,6 +5,8 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
+# 引用的是 target/deploy/voting-keypair.json的公钥
+# 执行 solana-keygen pubkey target/deploy/voting-keypair.json 查看
 voting = "5iRyM4LPFo5TZF3SzMqmaFzGhBdNm3mq3v7nVdBcSRpN"
 
 [registry]
@@ -19,9 +21,11 @@ wallet = "~/.config/solana/id.json"
 test = "../node_modules/.bin/nx run anchor:jest"
 # npm i -D ts-mocha
 # cnpm install --save-dev mocha
-#运行命令 anchor run basic1
+# 需要先运行 solana-test-validator 启动环境(重复执行测试,需先清空test-ledge在重新启动solana-test-validator)
+# 然后执行部署 anchor deploy --provider.cluster localnet)
+# 运行命令 anchor run basic1
 basic1 = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/basic.spec.ts"
-#运行命令 anchor run bankrun1
+#运行命令 anchor run bankrun1(内部会自动启动一个环境进行部署合约不需要执行其他命令了)
 bankrun1 = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/bankrun.spec.ts"
 #查看 program id
 #solana-keygen pubkey target/deploy/voting-keypair.json
