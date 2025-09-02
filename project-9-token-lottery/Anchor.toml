@@ -10,6 +10,7 @@ token_lottery = "7FzPbWJ1eMVTT8YhhzvgJ1H8Yo2AZ76L7xn7ddGA5uyz"
 [registry]
 url = "https://api.apr.dev"
 
+# solana config set --url localhost(mainnet-beta, testnet, devnet, localhost) 设置网络命令
 [provider]
 cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
