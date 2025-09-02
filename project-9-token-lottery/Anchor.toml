@@ -16,6 +16,8 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
+# anchor test --provider.cluster devnet(制定测试并部署网络)
+# anchor test --provider.cluster devnet --skip-deploy(跳过部署)
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 # npm i -D ts-mocha(package.json如果有不需要在执行)
 # npm install --save-dev mocha((package.json如果有不需要在执行))
@@ -28,6 +30,7 @@ shutdown_wait = 2000
 upgradeable = false
 
 [test.validator]
+url = "http://localhost:8899"
 bind_address = "127.0.0.1"
 ledger = ".anchor/test-ledger"
 rpc_port = 8899
