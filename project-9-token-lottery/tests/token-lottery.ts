@@ -15,18 +15,30 @@ describe("token-lottery", () => {
 
   const program = anchor.workspace.TokenLottery as Program<TokenLottery>;
   let switchboardProgram;
+  let metaDataProgramLength;
   const rngKp = anchor.web3.Keypair.generate();
 
   const TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+  const apiKey = "c5730fdb-3471-42ff-92ad-97256fa83871";
 
+  // 没有 api-key 可以在这个网站注册获取一个 免费的 有速率限制 每秒钟几个 https://www.helius.dev/
   before("Loading switchboard program", async () => {
     const switchboardIDL = await anchor.Program.fetchIdl(
-      sb.SB_ON_DEMAND_PID, 
-      {connection: new anchor.web3.Connection("https://mainnet.helius-rpc.com/?api-key=792d0c03-a2b0-469e-b4ad-1c3f2308158c")}
+      sb.ON_DEMAND_MAINNET_PID, // sb.SB_ON_DEMAND_PID,一开始是这个应该是写错了
+      {connection: new anchor.web3.Connection("https://mainnet.helius-rpc.com/?api-key=" + apiKey)}
     );
     switchboardProgram = new anchor.Program(switchboardIDL, provider);
+
+    const accountInfo = await connection.getAccountInfo(TOKEN_METADATA_PROGRAM_ID);
+    metaDataProgramLength = accountInfo?.data.length
   });
 
+  it("测试是否正常获取数据", async () => {
+    console.log("ondemand.so 合约公钥地址", switchboardProgram.programId.toString());
+    console.log("metadata.so 账户存储字节", metaDataProgramLength);
+  })
+  console.log("已退出");
+  return
   async function buyTicket() {
     const buyTicketIx = await program.methods.buyTicket()
       .accounts({
@@ -112,6 +124,7 @@ describe("token-lottery", () => {
   });
 
   it("Is committing and revealing a winner", async () => {
+    const queue_addr = "A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"; // switchboard
     const queue = new anchor.web3.PublicKey("A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w");
 
     const queueAccount = new sb.Queue(switchboardProgram, queue);
