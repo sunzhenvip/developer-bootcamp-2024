@@ -35,6 +35,17 @@ pub const URI: &str = "Token Lottery";
 #[constant]
 pub const SYMBOL: &str = "TICKET";
 
+/*
+
+{
+  "name": "Token Lottery Ticket #",
+  "symbol": "TLT",
+  "description": "Lottery Ticket",
+  "image": "https://img.freepik.com/free-photo/old-used-brown-torn-ticket-stub-isolated_1101-3193.jpg"
+}
+
+*/
+
 /**
 这个合约主要实现了一个基于 Solana NFT 的链上抽奖系统
 这个合约让商家或项目方可以在 Solana 链上举办一次完整的抽奖活动，用户购买 NFT 门票参与，系统在活动结束后自动、透明地抽取并发放奖金。
@@ -907,4 +918,5 @@ pub enum ErrorCode {
     → 在 Solana 里，可以用 Switchboard Functions 或 Clockwork 这样的自动化工具来代替 Chainlink Automation。
     → 如果不想依赖外部服务，也可以写个 后台脚本 来定时触发。
     要不要我给你写一个 基于 Switchboard Functions 定时触发 choose_a_winner 的示例？
+    https://github.com/TemiW3/token-lottery
  */
