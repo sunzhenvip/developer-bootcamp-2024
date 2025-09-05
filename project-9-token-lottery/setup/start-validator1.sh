@@ -107,4 +107,5 @@ sb config set solana localnet default-account "/data/network/rust/web3/developer
 
 # https://docs.switchboard.xyz/tooling-and-resources/technical-resources-and-documentation/solana-accounts 查看主网队列公钥
 # 获取主网的队列命令
+# npm install -g @switchboard-xyz/cli 安装 sb 命令行
 sb solana on-demand queue print A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w --cluster mainnet-beta
