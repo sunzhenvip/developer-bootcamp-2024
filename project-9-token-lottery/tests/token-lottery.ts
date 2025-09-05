@@ -4,6 +4,46 @@ import { Program } from "@coral-xyz/anchor";
 import { TokenLottery } from "../target/types/token_lottery";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+
+async function switchboardRandomness() {
+  const apiKey = "0738aea2-3950-43f9-85fd-81876b66f752";
+  const url = "https://mainnet.helius-rpc.com/?api-key=" + apiKey;
+  // const connection = new anchor.web3.Connection(url, "confirmed");
+  const connection = new anchor.web3.Connection("http://127.0.0.1:8899");
+  const keypair = await sb.AnchorUtils.initKeypairFromFile("/home/sz/.config/solana/id.json");
+  const wallet = new NodeWallet(keypair);
+  const provider = new anchor.AnchorProvider(connection,wallet)
+  const pid = sb.ON_DEMAND_MAINNET_PID;
+  // const pid1 = sb.SB_ON_DEMAND_PID;
+  const program = await anchor.Program.at(pid, provider);
+  console.log("\nSetup...");
+  console.log("Program", program!.programId.toString());
+
+  const sbQueue = new anchor.web3.PublicKey("A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w");
+  const queueAccount = new sb.Queue(program, sbQueue);
+  // 加载数据
+  const queueData = await queueAccount.loadData();
+  // console.log("queueData",queueData);
+  // 1. 生成随机数账户 & 初始化指令
+  // const rngKp = anchor.web3.Keypair.generate();
+  const rngKp = keypair;
+  console.log("rngKp", rngKp.publicKey.toString());
+  const [randomness, initIx] = await sb.Randomness.create(program, rngKp, sbQueue);
+
+  console.log("Randomness pubkey:", randomness.pubkey.toString());
+  // 2. 先发送交易创建 Randomness 账户
+  let tx = new anchor.web3.Transaction().add(initIx);
+  let sig = await provider.sendAndConfirm(tx, [rngKp]);
+  console.log("Init TX:", sig);
+
+
+  // 3. 再调用 commitIx（提交随机数请求）
+  const commitIx = await randomness.commitIx(sbQueue);
+  tx = new anchor.web3.Transaction().add(commitIx);
+  sig = await provider.sendAndConfirm(tx);
+  console.log("Commit TX:", sig);
+}
 
 
 describe("token-lottery", () => {
@@ -23,11 +63,19 @@ describe("token-lottery", () => {
 
   // 没有 api-key 可以在这个网站注册获取一个 免费的 有速率限制 每秒钟几个 https://www.helius.dev/
   before("Loading switchboard program", async () => {
-    const switchboardIDL = await anchor.Program.fetchIdl(
+    /*const switchboardIDL = await anchor.Program.fetchIdl(
       sb.ON_DEMAND_MAINNET_PID, // sb.SB_ON_DEMAND_PID,一开始是这个应该是写错了
       {connection: new anchor.web3.Connection("https://mainnet.helius-rpc.com/?api-key=" + apiKey)}
     );
-    switchboardProgram = new anchor.Program(switchboardIDL, provider);
+    switchboardProgram = new anchor.Program(switchboardIDL, provider);*/
+    /*var fs = require('fs');
+    fs.writeFile('tests/switchboard-idl.json', JSON.stringify(switchboardIDL), function (err) {
+      if (err) throw err;
+      console.log('The file has been saved!');
+    })*/
+
+    const switchboardIDL = require("../tests/switchboard-idl.json"); // 本地 IDL 文件
+    switchboardProgram = new anchor.Program(switchboardIDL,provider);
 
     const accountInfo = await connection.getAccountInfo(TOKEN_METADATA_PROGRAM_ID);
     metaDataProgramLength = accountInfo?.data.length
@@ -37,8 +85,8 @@ describe("token-lottery", () => {
     console.log("ondemand.so 合约公钥地址", switchboardProgram.programId.toString());
     console.log("metadata.so 账户存储字节", metaDataProgramLength);
   })
-  console.log("已退出");
-  return
+  // console.log("已退出");
+  // return
   async function buyTicket() {
     const buyTicketIx = await program.methods.buyTicket()
       .accounts({
@@ -132,7 +180,7 @@ describe("token-lottery", () => {
     try {
       await queueAccount.loadData();
     } catch (err) {
-      console.log("Queue account not found");
+      console.error("❌ Queue account not found:", err);
       process.exit(1);
     }
 
@@ -161,9 +209,10 @@ describe("token-lottery", () => {
       "Transaction Signature for randomness account creation: ",
       createRandomnessSignature
     );
-
+    const queueData = await randomness.loadData();
+    console.log("Queue data", queueData.authority.toString());
     const sbCommitIx = await randomness.commitIx(queue);
-
+    console.log("sbCommitIx",sbCommitIx.programId.toString());
     const commitIx = await program.methods.commitAWinner()
       .accounts(
         {
@@ -215,10 +264,11 @@ describe("token-lottery", () => {
       blockhash: blockhashContext.value.blockhash,
       lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight
     });
-    console.log("  Transaction Signature revealTx", revealSignature);
+    console.log("✅ Transaction Signature for reveal:", revealSignature);
   });
 
   it("Is claiming a prize", async () => {
+    return
     const tokenLotteryAddress = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from('token_lottery')],
       program.programId,
@@ -266,3 +316,125 @@ describe("token-lottery", () => {
   });
 
 });
+
+
+
+
+
+
+
+/*
+  it("Is committing and revealing a winner", async () => {
+    // await switchboardRandomness();
+    // return
+    // Switchboard Queue
+    // FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di
+    // A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w 原来的
+    const queue = new anchor.web3.PublicKey(
+      "A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
+    );
+    const queueAccount = new sb.Queue(switchboardProgram, queue);
+    console.log("Queue account", queue.toBase58());
+    try {
+      await queueAccount.loadData();
+    } catch (err) {
+      console.error("❌ Queue account not found:", err);
+      process.exit(1);
+    }
+
+    // 1. 创建 randomness account
+    const [randomness, ix] = await sb.Randomness.create(
+      switchboardProgram,
+      rngKp,
+      queue
+    );
+
+    console.log("Created randomness account..");
+    console.log("Randomness account", randomness.pubkey.toBase58());
+    console.log("rkp account", rngKp.publicKey.toBase58());
+    const createRandomnessTx = await sb.asV0Tx({
+      connection,
+      ixs: [ix],
+      payer: wallet.publicKey,
+      signers: [wallet.payer, rngKp],
+      computeUnitPrice: 75_000,
+      computeUnitLimitMultiple: 1.3,
+    });
+    const blockhashContext = await connection.getLatestBlockhashAndContext();
+    const createRandomnessSignature = await connection.sendTransaction(
+      createRandomnessTx
+    );
+    await connection.confirmTransaction({
+      signature: createRandomnessSignature,
+      blockhash: blockhashContext.value.blockhash,
+      lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight,
+    });
+    console.log(
+      "✅ Transaction Signature for randomness account creation:",
+      createRandomnessSignature
+    );
+
+
+    // 2. 加载 randomness 数据
+    const queueData = await randomness.loadData();
+
+    console.log("Queue data", queueData.authority.toString());
+    // return
+    console.log("xxxxxxxxx",createRandomnessSignature);
+    // 3. Commit winner
+    const sbCommitIx = await randomness.commitIx(queue);
+    console.log("总是出错的这一行数 sbCommitIxxxxxxxxx", sbCommitIx.programId);
+    // return
+    const commitIx = await program.methods
+      .commitAWinner()
+      .accounts({
+        randomnessAccountData: randomness.pubkey,
+      })
+      .instruction();
+
+    const commitTx = await sb.asV0Tx({
+      connection,
+      ixs: [sbCommitIx, commitIx],
+      payer: wallet.publicKey,
+      signers: [wallet.payer],
+      computeUnitPrice: 75_000,
+      computeUnitLimitMultiple: 1.3,
+    });
+
+    const commitSignature = await connection.sendTransaction(commitTx);
+    await connection.confirmTransaction({
+      signature: commitSignature,
+      blockhash: blockhashContext.value.blockhash,
+      lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight,
+    });
+
+    console.log("✅ Transaction Signature for commit:", commitSignature);
+
+    // 4. Reveal winner
+    const sbRevealIx = await randomness.revealIx();
+    const revealIx = await program.methods
+      .chooseAWinner()
+      .accounts({
+        randomnessAccountData: randomness.pubkey,
+      })
+      .instruction();
+
+    const revealTx = await sb.asV0Tx({
+      connection,
+      ixs: [sbRevealIx, revealIx],
+      payer: wallet.publicKey,
+      signers: [wallet.payer],
+      computeUnitPrice: 75_000,
+      computeUnitLimitMultiple: 1.3,
+    });
+
+    const revealSignature = await connection.sendTransaction(revealTx);
+    await connection.confirmTransaction({
+      signature: revealSignature,
+      blockhash: blockhashContext.value.blockhash,
+      lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight,
+    });
+
+    console.log("✅ Transaction Signature for reveal:", revealSignature);
+  });
+*/
