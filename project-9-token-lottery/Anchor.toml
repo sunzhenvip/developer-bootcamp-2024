@@ -32,6 +32,7 @@ upgradeable = false
 
 [test.validator]
 url = "http://localhost:8899"
+#url = "https://api.mainnet-beta.solana.com"
 bind_address = "127.0.0.1"
 ledger = ".anchor/test-ledger"
 rpc_port = 8899
