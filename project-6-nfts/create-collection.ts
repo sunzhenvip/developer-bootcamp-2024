@@ -96,7 +96,7 @@ const transaction = createNft(umi, {
   mint: collectionMint, // NFT 的 mint 地址
   name: "My Collection", // NFT 名称
   symbol: "MC", // NFT 符号
-  uri: "https://raw.githubusercontent.com/solana-developers/professional-education/main/labs/sample-nft-collection-offchain-data.json",
+  uri: "https://raw.githubusercontent.com/sunzhenvip/developer-bootcamp-2024/refs/heads/master/project-6-nfts/nft-collection-offchain-data.json",
   sellerFeeBasisPoints: percentAmount(0), // 版税 = 0%
   isCollection: true, // 标记为 Collection NFT
 });
