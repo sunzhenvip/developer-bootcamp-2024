@@ -91,7 +91,8 @@ process.exit(0);*/
 const collectionMint = generateSigner(umi);
 
 // 构造一笔交易，创建一个 Collection NFT
-const transaction = await createNft(umi, {
+// await 手动确定 不需要加在 createNft 函数前面
+const transaction = createNft(umi, {
   mint: collectionMint, // NFT 的 mint 地址
   name: "My Collection", // NFT 名称
   symbol: "MC", // NFT 符号
