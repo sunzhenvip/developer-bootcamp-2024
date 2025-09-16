@@ -92,7 +92,7 @@ const collectionMint = generateSigner(umi);
 
 // 构造一笔交易，创建一个 Collection NFT
 // await 手动确定 不需要加在 createNft 函数前面
-const transaction = createNft(umi, {
+const transaction = await createNft(umi, {
   mint: collectionMint, // NFT 的 mint 地址
   name: "My Collection", // NFT 名称
   symbol: "MC", // NFT 符号
@@ -102,12 +102,20 @@ const transaction = createNft(umi, {
 });
 // 发送并确认交易
 // 第二个参数 ,{ send: { commitment: "finalized" } }
-let result = await transaction.sendAndConfirm(umi);
+let result = await transaction.sendAndConfirm(umi,
+    {
+      send: {
+        preflightCommitment: "confirmed",  // 这里是合法字段
+        skipPreflight: false,
+        maxRetries: 5,
+      }
+    }
+);
 const txSignature = base58.deserialize(result.signature)[0];
 console.log("createNft signature ", txSignature);
 console.log("collectionMint ", collectionMint.publicKey.toString());
-console.log(`稍等 10 秒钟加载 获取链上数据.....`);
-await sleep(10_000); // 等待 10000 毫秒 = 2 秒
+// console.log(`稍等 10 秒钟加载 获取链上数据.....`);
+// await sleep(20_000); // 等待 10000 毫秒 = 2 秒
 // 从链上获取刚刚创建的 NFT 资产信息
 const createdCollectionNft = await fetchDigitalAsset( // 可能有时会出错 重新执行命令在试试
   umi,
