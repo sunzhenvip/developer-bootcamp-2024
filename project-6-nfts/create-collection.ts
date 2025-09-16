@@ -81,7 +81,12 @@ console.log(
         "devnet"
     )}`
 );
-// process.exit(0);
+/*function bigintReplacer(key: string, value: any) { // 自定义 replacer，把 BigInt 转成字符串
+  return typeof value === "bigint" ? value.toString() : value;
+}
+const collectionJson = JSON.stringify(collectionNft, bigintReplacer, 2); // 缩进 2 个空格
+console.log(collectionJson);
+process.exit(0);*/
 // 生成一个新的 Mint 地址 (NFT 的唯一标识)
 const collectionMint = generateSigner(umi);
 
@@ -125,7 +130,6 @@ collectionMint  3nCgXqMjBQt52xvjPzwrBYhAccrx9iK7sqnsmNeFLEeA
 稍等 10 秒钟加载 获取链上数据.....
 Created Collection 📦! Address is https://explorer.solana.com/address/3nCgXqMjBQt52xvjPzwrBYhAccrx9iK7sqnsmNeFLEeA?cluster=devnet
 */
-
 
 // 等待指定毫秒数
 function sleep(ms: number): Promise<void> {
