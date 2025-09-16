@@ -74,6 +74,10 @@ describe("token-lottery", () => {
       console.log('The file has been saved!');
     })*/
 
+    /*await provider.connection.requestAirdrop(
+      rngKp.publicKey,
+      anchor.web3.LAMPORTS_PER_SOL * 100  // 空投 2 SOL
+    );*/
     const switchboardIDL = require("../tests/switchboard-idl.json"); // 本地 IDL 文件
     switchboardProgram = new anchor.Program(switchboardIDL,provider);
 
@@ -84,6 +88,7 @@ describe("token-lottery", () => {
   it("测试是否正常获取数据", async () => {
     console.log("ondemand.so 合约公钥地址", switchboardProgram.programId.toString());
     console.log("metadata.so 账户存储字节", metaDataProgramLength);
+    console.log("rngKp.publicKey", rngKp.publicKey.toString());
   })
   // console.log("已退出");
   // return
@@ -178,7 +183,11 @@ describe("token-lottery", () => {
     const queueAccount = new sb.Queue(switchboardProgram, queue);
     console.log("Queue account", queue.toString());
     try {
-      await queueAccount.loadData();
+      const loadData = await queueAccount.loadData();
+      console.log("await queueAccount.loadData() ", loadData.oracleKeys.length);
+      /*for (let i = 0; i < loadData.oracleKeys.length; i++) {
+        console.log(loadData.oracleKeys[i].toString())
+      }*/
     } catch (err) {
       console.error("❌ Queue account not found:", err);
       process.exit(1);
@@ -236,12 +245,8 @@ describe("token-lottery", () => {
       blockhash: blockhashContext.value.blockhash,
       lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight
     });
-    console.log(
-      "Transaction Signature for commit: ",
-      commitSignature
-    );
-
-    const sbRevealIx = await randomness.revealIx();
+    console.log("✅ Transaction Signature for commit: ",commitSignature);
+    const sbRevealIx = await randomness.revealIx(); // 这里报错
     const revealIx = await program.methods.chooseAWinner()
       .accounts({
         randomnessAccountData: randomness.pubkey
