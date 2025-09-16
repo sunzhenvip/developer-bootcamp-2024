@@ -71,7 +71,7 @@ console.log("Set up Umi instance for user => 为用户设置Umi实例");
 // 从链上获取刚刚创建的 NFT 资产信息
 const collectionNft = await fetchDigitalAsset( // 可能有时会出错 重新执行命令在试试
     umi,
-    publicKey("FoBrLHiycm996XUYkZMAGjnRZhMikkk7W1B6bSkCwxAG")
+    publicKey("C9RkzJxZkzrEJGHAv9ag9rdZoRH8GdTDrPpqEZWdPP14")
 );
 // 打印 Explorer 浏览器地址，方便查看 NFT
 console.log(
