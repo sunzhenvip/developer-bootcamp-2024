@@ -20,6 +20,7 @@ import {
 // Umi 是 Metaplex 的新版框架，用于处理链上事务
 // createUmi - 创建 Umi 客户端实例
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+// import { PublicKey } from "@metaplex-foundation/umi-public-keys";
 // Solana Web3.js 库
 // Connection - RPC 连接
 // LAMPORTS_PER_SOL - 单位转换 (1 SOL = 10^9 Lamports)
@@ -33,6 +34,7 @@ import {
   generateSigner,
   keypairIdentity,
   percentAmount,
+  publicKey
 } from "@metaplex-foundation/umi";
 // 建立与 Devnet 的 RPC 连接
 const connection = new Connection(clusterApiUrl("devnet"));
@@ -66,6 +68,20 @@ umi.use(keypairIdentity(umiUser));
 
 console.log("Set up Umi instance for user => 为用户设置Umi实例");
 
+// 从链上获取刚刚创建的 NFT 资产信息
+const collectionNft = await fetchDigitalAsset( // 可能有时会出错 重新执行命令在试试
+    umi,
+    publicKey("FoBrLHiycm996XUYkZMAGjnRZhMikkk7W1B6bSkCwxAG")
+);
+// 打印 Explorer 浏览器地址，方便查看 NFT
+console.log(
+    `Load Collection 📦! Address is ${getExplorerLink(
+        "address",
+        collectionNft.mint.publicKey,
+        "devnet"
+    )}`
+);
+// process.exit(0);
 // 生成一个新的 Mint 地址 (NFT 的唯一标识)
 const collectionMint = generateSigner(umi);
 
@@ -82,12 +98,12 @@ const transaction = await createNft(umi, {
 // 第二个参数 ,{ send: { commitment: "finalized" } }
 let result = await transaction.sendAndConfirm(umi);
 const txSignature = base58.deserialize(result.signature)[0];
-console.log("signature ", txSignature);
+console.log("createNft signature ", txSignature);
 console.log("collectionMint ", collectionMint.publicKey.toString());
 console.log(`稍等 10 秒钟加载 获取链上数据.....`);
 await sleep(10_000); // 等待 10000 毫秒 = 2 秒
 // 从链上获取刚刚创建的 NFT 资产信息
-const createdCollectionNft = await fetchDigitalAsset(
+const createdCollectionNft = await fetchDigitalAsset( // 可能有时会出错 重新执行命令在试试
   umi,
   collectionMint.publicKey
 );
