@@ -4,6 +4,8 @@ solana address
 sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh
 此网站领取测试币开发网|测试网 https://faucet.solana.com/
 
+yarn add @metaplex-foundation/mpl-token-metadata@2.13.0
+
 1、yarn add @metaplex-foundation/mpl-token-metadata@3.2.1
 2、solana config set -u devnet(设置开发环境) 用完切换回本地环境 solana config set -u localhost
 3、solana-keygen grind --starts-with min:1
@@ -45,3 +47,14 @@ Signature: 37cnxaDsEznTqw94KkKkXXUPnt689gz7BZ1r4srgoASHoByd9gu99bT6G7U3NvQpNDU9J
 
 8、spl-token accounts --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(用户钱包地址)
 9、spl-token account-info  minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(代币地址)
+
+
+4、spl-token create-token --program-id TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb --enable-metadata tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV.json
+
+Creating token tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV under program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb
+To initialize metadata inside the mint, please run `spl-token initialize-metadata tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV <YOUR_TOKEN_NAME> <YOUR_TOKEN_SYMBOL> <YOUR_TOKEN_URI>`, and sign with the mint authority.
+
+Address:  tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV
+Decimals:  9
+
+Signature: 5MoPvMNUBHsuAE7SZQwJLTxfy4TTn2J5JJP2gAu3P4P7i7DvjyjSSzwAquoqsQ1DuDusEZEKoYg4Jp9K55nxwyEx
