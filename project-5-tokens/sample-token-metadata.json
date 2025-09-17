@@ -1,0 +1,6 @@
+{
+  "name": "Solana Course Token",
+  "symbol": "COURSE",
+  "description": "A demo token for Solana Professional Education",
+  "image": "https://raw.githubusercontent.com/sunzhenvip/developer-bootcamp-2024/refs/heads/master/project-5-tokens/image.png"
+}
