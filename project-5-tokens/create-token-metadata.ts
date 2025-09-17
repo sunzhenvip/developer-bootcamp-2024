@@ -37,7 +37,7 @@ const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
 );
 
 // Subtitute in your token mint account
-const tokenMintAccount = new PublicKey("tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV");
+const tokenMintAccount = new PublicKey("94tfu4LVsTY1Xwb9RS7Cebhnma1oSTDBM5Xqpz2Pz1xS");
 
 const tokenMintLink0 = getExplorerLink(
     "address",
@@ -47,6 +47,7 @@ const tokenMintLink0 = getExplorerLink(
 
 console.log(`✅ Look at the token mint again: ${tokenMintLink0}`);
 
+// https://solana.com/zh/developers/courses/tokens-and-nfts/token-program
 const metadataData: DataV2 = {
   name: "Solana Training Token",
   symbol: "TRAINING",
@@ -93,6 +94,7 @@ const createMetadataAccountInstruction =
 
 transaction.add(createMetadataAccountInstruction);
 
+// 运行 npx esrun create-token-mint.ts  获取到 tokenMintAccount 在运行当前脚本不会报错了
 const transactionSignature = await sendAndConfirmTransaction( // 这里出错
   connection,
   transaction,
@@ -114,3 +116,5 @@ const tokenMintLink = getExplorerLink(
 );
 
 console.log(`✅ Look at the token mint again: ${tokenMintLink}!`);
+
+// ✅ Look at the token mint again: https://explorer.solana.com/address/94tfu4LVsTY1Xwb9RS7Cebhnma1oSTDBM5Xqpz2Pz1xS?cluster=devnet
