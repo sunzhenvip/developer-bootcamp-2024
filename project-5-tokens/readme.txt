@@ -49,6 +49,8 @@ Signature: 37cnxaDsEznTqw94KkKkXXUPnt689gz7BZ1r4srgoASHoByd9gu99bT6G7U3NvQpNDU9J
 9、spl-token account-info  minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(代币地址)
 
 
+solana account tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV
+
 4、spl-token create-token --program-id TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb --enable-metadata tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV.json
 
 Creating token tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV under program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb
