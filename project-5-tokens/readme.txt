@@ -29,8 +29,19 @@ Signature: 5gFKqnSDLXxKi5sNFLBr8HVHSyxcRA5ykfWCVPq8JMKK9gsFhBmND7WTENpVYx6kLUryZ
 
 Signature: 22fkWpgAyFg9hYP6uoLS87xPmFFmgBMx29mTsoUoiD8ToeEA5wXSCHnv8WjEfxzfZnohaMiPC87A5rfjvFYm1B7Z
 
-6、spl-token create-account minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(创建PDA账户)
+6、spl-token create-account minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(创建PDA账户 有疑问 是 PDA ATA账户？)
 
 Creating account Ed1S7TtPwoG7XgsAeb7QRZ79ykUdXnKf87vXqUpgvNgF
 
 Signature: 4b3h3QXRrrhFFVL6u3YEwAGSbToztYoKBc95Xn94TCMrj82Q6hZXGmfwBJn8tQ4bU5YZ7tewt9zbqfyGSSoiZsqH
+
+7、spl-token mint minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG 1000
+Minting 1000 tokens
+  Token: minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG
+  Recipient: Ed1S7TtPwoG7XgsAeb7QRZ79ykUdXnKf87vXqUpgvNgF
+
+Signature: 37cnxaDsEznTqw94KkKkXXUPnt689gz7BZ1r4srgoASHoByd9gu99bT6G7U3NvQpNDU9JrxtaEdkbMBy685YbbdT
+
+
+8、spl-token accounts --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(用户钱包地址)
+9、spl-token account-info  minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(代币地址)
