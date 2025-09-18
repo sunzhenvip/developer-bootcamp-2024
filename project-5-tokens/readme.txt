@@ -47,7 +47,8 @@ Signature: 37cnxaDsEznTqw94KkKkXXUPnt689gz7BZ1r4srgoASHoByd9gu99bT6G7U3NvQpNDU9J
 
 8、spl-token accounts --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(用户钱包地址 列出某个所有者拥有的所有 SPL 代币账户及其余额)
 9、spl-token account-info  minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(代币地址)
-
+10、 spl-token account-info --program-id TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb  minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG
+返回的 Address 地址是 ATA生成的地址
 
 查看账号归属的Owner信息命令 solana account tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV
 
