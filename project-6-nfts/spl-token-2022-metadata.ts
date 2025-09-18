@@ -17,6 +17,9 @@ import {
     getTokenMetadata,
     TYPE_SIZE,
     LENGTH_SIZE,
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccount, ASSOCIATED_TOKEN_PROGRAM_ID,
+    createAssociatedTokenAccountInstruction
 } from "@solana/spl-token";
 import {
     createInitializeInstruction,
@@ -45,7 +48,7 @@ let transaction: Transaction;
 let transactionSignature: string;
 
 // get file from local
-const mintFileName = "/data/network/rust/web3/developer-bootcamp-2024/project-5-tokens/tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV.json";
+const mintFileName = "../project-5-tokens/tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV.json";
 const mintKeypair = await getKeypairFromFile(mintFileName);
 // Address for Mint Account
 // 提前执行了这个命令 链上运行了
