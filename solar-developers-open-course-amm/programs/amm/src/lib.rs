@@ -27,3 +27,5 @@ pub mod amm {
         ctx.accounts.swap(amount, max_amount_in, is_a)
     }
 }
+
+// deposit 应该有一个初始化流动性 和 追加流动性，先当它有一个初始化了

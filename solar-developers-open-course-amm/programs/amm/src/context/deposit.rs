@@ -81,6 +81,12 @@ impl<'info> Deposit<'info> {
             // Check slippage B
             require_gte!(max_token_b, amount_b);
             (amount_a, amount_b, amount)
+            /*
+                k2 = k + amount
+                ratio = k2 * 1000000 / k
+                amount_a = a * ratio / 1000000 - a
+                amount_b = b * ratio / 1000000 - b
+             */
         };
 
         // Deposit Token A Amount
