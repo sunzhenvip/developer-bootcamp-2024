@@ -174,6 +174,17 @@ describe("amm", () => {
     const tx = await program.methods.swap(
       new BN(4), new BN(5), true
     )
+      // .preInstructions(
+      //   [
+      //     createAssociatedTokenAccountIdempotentInstruction(
+      //       signer.publicKey,
+      //       signerAtaLp,
+      //       signer.publicKey,
+      //       mintLp,
+      //       tokenProgram
+      //     )
+      //   ]
+      // )
     .accountsStrict({
       ...accounts
     })
