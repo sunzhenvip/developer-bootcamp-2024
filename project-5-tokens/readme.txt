@@ -53,6 +53,7 @@ Signature: 37cnxaDsEznTqw94KkKkXXUPnt689gz7BZ1r4srgoASHoByd9gu99bT6G7U3NvQpNDU9J
 12、spl-token balance minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(查询余额)
 13、spl-token balance minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG
 14、spl-token accounts --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(列出所有的mint token balance)
+15、spl-token  display minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(查看代币信息详情)
 查看账号归属的Owner信息命令 solana account tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV
 
 4、spl-token create-token --program-id TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb --enable-metadata tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV.json
