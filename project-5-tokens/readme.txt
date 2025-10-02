@@ -55,6 +55,30 @@ Signature: 37cnxaDsEznTqw94KkKkXXUPnt689gz7BZ1r4srgoASHoByd9gu99bT6G7U3NvQpNDU9J
 14、spl-token accounts --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(列出所有的mint token balance)
 15、spl-token  display minYurXwc6ghWsZpabot8EnDSmG7K7QqnRjod9mDeEG(查看代币信息详情)
 查看账号归属的Owner信息命令 solana account tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV
+16、查看某种代币余额 spl-token accounts --owner sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(钱包地址) So11111111111111111111111111111111111111112(tokenMint地址)
+
+17、solana account DgVZHyhdaEEqJsxggmgffP1uhUC5Tkb7Xss8QHQ443w6(ATA地址 有 WSOL代币地址和钱包地址组合生成的)
+
+Public Key: DgVZHyhdaEEqJsxggmgffP1uhUC5Tkb7Xss8QHQ443w6
+Balance: 0.02203928 SOL
+Owner: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+Executable: false
+Rent Epoch: 18446744073709551615
+Length: 165 (0xa5) bytes
+0000:   06 9b 88 57  fe ab 81 84
+
+sz@sz: spl-token account-info So11111111111111111111111111111111111111112 sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh(钱包地址)
+
+SPL Token Account
+  Address: DgVZHyhdaEEqJsxggmgffP1uhUC5Tkb7Xss8QHQ443w6
+  Program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+  Balance: 0.02
+  Decimals: 9
+  Mint: So11111111111111111111111111111111111111112 (native)
+  Owner: sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh
+  State: Initialized
+  Delegation: (not set)
+  Close authority: (not set)
 
 4、spl-token create-token --program-id TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb --enable-metadata tescD95ij1c27G7mDHXzN8wY3M6AuzN7nv6F5u813RV.json
 
