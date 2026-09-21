@@ -1,3 +1,5 @@
+// 消除某些编译警告
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 // Our program's address!
 // This matches the key in the target/deploy directory
