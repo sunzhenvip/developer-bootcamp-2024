@@ -11,7 +11,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("DAehvmx2vZoWCJi7Qo3Y4YF5vrEWHQRJ288kqKwDy5DV");
+declare_id!("3pAMz7q8ZBDn8ZdpqRuCKmVCALebWQ2EASjnJVwzx2dq");
 
 /**
     允许用户在两种不同的代币之间进行点对点交换
