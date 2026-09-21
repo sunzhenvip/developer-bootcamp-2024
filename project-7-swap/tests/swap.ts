@@ -143,7 +143,10 @@ describe("swap", async () => {
       .signers([alice])
       .rpc();
 
-    await confirmTransaction(connection, transactionSignature);
+    // await confirmTransaction(connection, transactionSignature);
+
+    const signature = await confirmTransaction(connection, transactionSignature);
+    console.log("signature",signature);
 
     // Check our vault contains the tokens offered
     const vaultBalanceResponse = await connection.getTokenAccountBalance(vault);
