@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "name": "developer-bootcamp-2024",
+      "path": "."
+    },
+    {
+      "name": "project-2-anchor",
+      "path": "project-2-voting/anchor"
+    },
+    {
+      "name": "project-8-anchor",
+      "path": "project-8-token-vesting/anchor"
+    }
+  ],
+  "settings": {
+    "rust-analyzer.server.path": "/home/sz/.rustup/toolchains/1.94.0-x86_64-unknown-linux-gnu/bin/rust-analyzer"
+  }
+}
