@@ -1,4 +1,5 @@
 
+TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA(普通spl-token)
 TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb(表示 token2022)
 solana address
 sunkq6xnqcHMqrrBX7wPTHS9sVCZ9SNTentvHyFSnxh
