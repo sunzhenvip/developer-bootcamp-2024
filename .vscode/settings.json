@@ -1,0 +1,19 @@
+{
+  "rust-analyzer.server.path": "/home/sz/.rustup/toolchains/1.94.0-x86_64-unknown-linux-gnu/bin/rust-analyzer",
+  "rust-analyzer.linkedProjects": [
+    "${workspaceFolder}/project-1-favorites/Cargo.toml",
+    "${workspaceFolder}/project-2-voting/anchor/Cargo.toml",
+    "${workspaceFolder}/project-3-blinks/anchor/Cargo.toml",
+    "${workspaceFolder}/project-4-crud-app/anchor/Cargo.toml",
+    "${workspaceFolder}/project-7-swap/Cargo.toml",
+    "${workspaceFolder}/project-8-token-vesting/anchor/Cargo.toml",
+    "${workspaceFolder}/project-9-token-lottery/Cargo.toml",
+    "${workspaceFolder}/project-10-lending/Cargo.toml",
+    "${workspaceFolder}/project-11-programmable-money/program/Cargo.toml",
+    "${workspaceFolder}/project-12-attack-the-bank/bank_one/Cargo.toml",
+    "${workspaceFolder}/project-12-attack-the-bank/bank_two/Cargo.toml",
+    "${workspaceFolder}/project-12-attack-the-bank/bank_three/Cargo.toml",
+    "${workspaceFolder}/project-13-getting-to-production/anchor/Cargo.toml",
+    "${workspaceFolder}/solar-developers-open-course-amm/Cargo.toml"
+  ]
+}
