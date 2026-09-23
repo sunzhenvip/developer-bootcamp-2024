@@ -54,8 +54,8 @@ describe("token-lottery", () => {
   anchor.setProvider(provider);
 
   const program = anchor.workspace.TokenLottery as Program<TokenLottery>;
-  let switchboardProgram;
-  let metaDataProgramLength;
+  let switchboardProgram:Program<any>;
+  let metaDataProgramLength:any;
   const rngKp = anchor.web3.Keypair.generate();
 
   const TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
@@ -219,8 +219,18 @@ describe("token-lottery", () => {
       createRandomnessSignature
     );
     const queueData = await randomness.loadData();
+    /*报错详情 TypeError: Cannot read properties of null (reading 'account')
+    at /data/network/rust/web3/sunzhenvip/developer-bootcamp-2024/project-9-token-lottery/node_modules/@switchboard-xyz/on-demand/src/accounts/queue.ts:791:60
+    at Array.map (<anonymous>)
+    at Queue.<anonymous> (node_modules/@switchboard-xyz/on-demand/src/accounts/queue.ts:791:8)
+    at Generator.next (<anonymous>)
+    at fulfilled (node_modules/@switchboard-xyz/on-demand/dist/cjs/accounts/queue.js:38:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    error Command failed with exit code 1.
+    info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+    */
     console.log("Queue data", queueData.authority.toString());
-    const sbCommitIx = await randomness.commitIx(queue);
+    const sbCommitIx = await randomness.commitIx(queue);// 这一行报错
     console.log("sbCommitIx",sbCommitIx.programId.toString());
     const commitIx = await program.methods.commitAWinner()
       .accounts(
@@ -246,7 +256,11 @@ describe("token-lottery", () => {
       lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight
     });
     console.log("✅ Transaction Signature for commit: ",commitSignature);
-    const sbRevealIx = await randomness.revealIx(); // 这里报错
+    // 原来的失败点在前面的 randomness.commitIx(queue)：旧脚本加载的是已经
+    // 退出 Queue 的 2024 年 Oracle，所以 SDK 查询账户后得到 null.account。
+    // setup-local.sh 现在会同步当前成员并准备一个可用的本地 Oracle，因此
+    // commit 成功后这里才能从同一个 randomness account 生成 reveal 指令。
+    const sbRevealIx = await randomness.revealIx();
     const revealIx = await program.methods.chooseAWinner()
       .accounts({
         randomnessAccountData: randomness.pubkey
@@ -264,8 +278,11 @@ describe("token-lottery", () => {
     });
 
     const revealSignature = await connection.sendTransaction(revealTx);
+    // 必须等待 reveal 交易确认后再进入下一个 claim 测试。这里若误用上面的
+    // commitSignature，只会再次确认旧交易，claim 可能抢在 winner 写入前执行，
+    // 最终报 WinnerNotChosen。
     await connection.confirmTransaction({
-      signature: commitSignature,
+      signature: revealSignature,
       blockhash: blockhashContext.value.blockhash,
       lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight
     });
@@ -273,7 +290,7 @@ describe("token-lottery", () => {
   });
 
   it("Is claiming a prize", async () => {
-    return
+    // return
     const tokenLotteryAddress = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from('token_lottery')],
       program.programId,
