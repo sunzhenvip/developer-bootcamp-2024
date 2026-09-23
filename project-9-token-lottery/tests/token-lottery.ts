@@ -5,6 +5,7 @@ import { TokenLottery } from "../target/types/token_lottery";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { Idl } from "@coral-xyz/anchor/dist/cjs/idl";
 describe("token-lottery", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
@@ -21,20 +22,32 @@ describe("token-lottery", () => {
     "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
   );
   const apiKey = "c5730fdb-3471-42ff-92ad-97256fa83871";
-
+  async function getSwitchboardIDL() {
+    const switchboardIDL: Idl | null = await anchor.Program.fetchIdl(
+      sb.ON_DEMAND_MAINNET_PID, // sb.SB_ON_DEMAND_PID,一开始是这个应该是写错了
+      {
+        connection: new anchor.web3.Connection(
+          "https://mainnet.helius-rpc.com/?api-key=" + apiKey
+        ),
+      }
+    );
+    // 在使用前进行空值检查
+    if (!switchboardIDL) {
+      throw new Error("Failed to fetch IDL: returned null");
+    }
+    switchboardProgram = new anchor.Program(switchboardIDL, provider);
+    let fs = require("fs");
+    fs.writeFile(
+      "tests/switchboard-idl.json",
+      JSON.stringify(switchboardIDL),
+      function (err: Error | null) {
+        if (err) throw err;
+        console.log("The file has been saved!");
+      }
+    );
+  }
   // 没有 api-key 可以在这个网站注册获取一个 免费的 有速率限制 每秒钟几个 https://www.helius.dev/
   before("Loading switchboard program", async () => {
-    /*const switchboardIDL = await anchor.Program.fetchIdl(
-      sb.ON_DEMAND_MAINNET_PID, // sb.SB_ON_DEMAND_PID,一开始是这个应该是写错了
-      {connection: new anchor.web3.Connection("https://mainnet.helius-rpc.com/?api-key=" + apiKey)}
-    );
-    switchboardProgram = new anchor.Program(switchboardIDL, provider);*/
-    /*var fs = require('fs');
-    fs.writeFile('tests/switchboard-idl.json', JSON.stringify(switchboardIDL), function (err) {
-      if (err) throw err;
-      console.log('The file has been saved!');
-    })*/
-
     /*await provider.connection.requestAirdrop(
       rngKp.publicKey,
       anchor.web3.LAMPORTS_PER_SOL * 100  // 空投 2 SOL
